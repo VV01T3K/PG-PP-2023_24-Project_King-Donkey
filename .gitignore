@@ -2,3 +2,6 @@
 !*.cpp
 !*.h
 !*.bmp
+!szablon2vs19.sln
+!*vcxproj
+!*.code-workspace
