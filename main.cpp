@@ -94,13 +94,15 @@ void DrawRectangle(SDL_Surface *screen, int x, int y, int l, int k,
         DrawLine(screen, x + 1, i, l - 2, 1, 0, fillColor);
 };
 
-#define MAX_OBJECTS 30
+#define MAX_SURFACES 30
+#define MAX_TEXTURES 5
+#define MAX_OBJECTS 50
 typedef struct {
     SDL_Surface *sprite[9];
 } SPRITESHEET_T;
 typedef struct {
-    SDL_Surface *surfaces[MAX_OBJECTS];
-    SDL_Texture *textures[MAX_OBJECTS];
+    SDL_Surface *surfaces[MAX_SURFACES];
+    SDL_Texture *textures[MAX_TEXTURES];
     SDL_Window *window;
     SDL_Renderer *renderer;
     int surface_index = 0;
@@ -135,17 +137,70 @@ int load_image_into_surface(SDL_Surface **surface, const char *image_path,
     return 0;
 }
 enum Direction { RIGHT, LEFT, UP, DOWN };
+enum ObjectType { NOTHING, BORDER, LADDER, PLATFORM, ENEMY };
+
+typedef struct {
+    int left;
+    int right;
+    int top;
+    int bottom;
+} BORDERS_T;
+
+class OBJECT {
+   private:
+    SPRITESHEET_T *sheet;
+    double *frameCounter;
+    int curent_sprite = 0;
+    int anim_cycle = 0;
+
+   public:
+    double x = 0;
+    double y = 0;
+    int type;
+
+    // Default constructor
+    OBJECT() {}
+    // Overloaded constructor
+    OBJECT(int type, double x, double y, SPRITESHEET_T *sheet,
+           double *frameCounter)
+        : type(type), x(x), y(y), sheet(sheet), frameCounter(frameCounter) {}
+
+    void draw(SDL_Surface *screen);
+    double getBORDER(Direction side);
+};
+double OBJECT::getBORDER(Direction side) {
+    switch (side) {
+        case RIGHT:
+            return this->x + this->sheet->sprite[0]->w / 2;
+        case LEFT:
+            return this->x - this->sheet->sprite[0]->w / 2;
+        case UP:
+            return this->y - this->sheet->sprite[0]->h / 2;
+        case DOWN:
+            return this->y + this->sheet->sprite[0]->h / 2;
+        default:
+            return 0;
+    }
+}
+void OBJECT::draw(SDL_Surface *screen) {
+    DrawSurface(screen, this->sheet->sprite[this->curent_sprite], this->x,
+                this->y);
+}
 class Player {
    private:
-    int collison_state = 0;
-    double speed = 1.5;
-    double *delta;
-    int jump_state = 0;
     SPRITESHEET_T *sheet;
-    int curent_sprite = 0;
-    Direction direction = RIGHT;
+    OBJECT **objectList;
+    int objectListSize;
+    double *delta;
     double *frameCounter;
+    Direction direction = RIGHT;
+    double speed = 1.5;
+    int jump_state = 0;
+    int curent_sprite = 0;
     int anim_cycle = 0;
+    float gravity = 2.5;
+    double delta_x = 0;
+    double delta_y = 0;
 
    public:
     int ladder_state = 0;
@@ -155,29 +210,69 @@ class Player {
     double y = 0;
     // void jump();
     // void gravity();
-    Player(int x, int y, double *delta, SPRITESHEET_T *sheet,
-           double *frameCounter) {
-        this->x = (double)x;
-        this->y = (double)y;
-        this->delta = delta;
-        this->sheet = sheet;
-        this->frameCounter = frameCounter;
-    }
+    Player(double x, double y, double *delta, SPRITESHEET_T *sheet,
+           double *frameCounter, OBJECT **objectList, int objectListSize)
+        : objectList(objectList),
+          objectListSize(objectListSize),
+          delta(delta),
+          sheet(sheet),
+          frameCounter(frameCounter),
+          x(x),
+          y(y) {}
+
     void draw(SDL_Surface *screen);
     void move(Direction direction);
     void animate();
-    int collision();
+    void collision();
+    void nextFrame(SDL_Surface *screen);
+    double getBORDER(Direction side);
 };
-int Player::collision() {
-    if (this->x - this->sheet->sprite[0]->w / 2 < start_x) return 1;
-    if (this->x + this->sheet->sprite[0]->w / 2 > end_x) return 1;
-    if (this->y - this->sheet->sprite[0]->h / 2 < start_y) return 1;
-    if (this->y + this->sheet->sprite[0]->h / 2 > end_y) return 1;
+double Player::getBORDER(Direction side) {
+    switch (side) {
+        case RIGHT:
+            return this->x + this->sheet->sprite[0]->w / 2;
+        case LEFT:
+            return this->x - this->sheet->sprite[0]->w / 2;
+        case UP:
+            return this->y - this->sheet->sprite[0]->h / 2;
+        case DOWN:
+            return this->y + this->sheet->sprite[0]->h / 2;
+        default:
+            return 0;
+    }
+}
+void Player::nextFrame(SDL_Surface *screen) {
+    if (this->ladder_state == 0) {
+        double gravity = this->gravity * *delta * 100;
+        this->y += gravity;
+        this->delta_y += gravity;
+    }
 
-    return 0;
+    this->collision();
+
+    this->draw(screen);
+    this->delta_x = 0;
+    this->delta_y = 0;
+}
+
+void Player::collision() {
+    int horizontalSTOP = 0, verticalSTOP = 0;
+    int UNALIVE = 0;
+    // check for collision with screen borders
+    if (this->getBORDER(LEFT) < start_x) (horizontalSTOP = 1);
+    if (this->getBORDER(RIGHT) > end_x + start_x) (horizontalSTOP = 1);
+    if (this->getBORDER(UP) < start_y) (verticalSTOP = 1);
+    if (this->getBORDER(DOWN) > end_y + start_y) (verticalSTOP = 1);
+
+    // check for collision with objects
+    // ....
+
+    // EVENTS
+    if (UNALIVE) this->dead_state = 1;
+    if (horizontalSTOP) this->x -= this->delta_x;
+    if (verticalSTOP) this->y -= this->delta_y;
 }
 void Player::draw(SDL_Surface *screen) {
-    if (this->collision()) this->curent_sprite = 8;
     DrawSurface(screen, this->sheet->sprite[this->curent_sprite], this->x,
                 this->y);
 }
@@ -219,11 +314,11 @@ void Player::move(Direction direction) {
         switch (direction) {
             case UP:
                 this->y -= distance = this->speed * *delta * 80;
-                if (this->collision()) this->y += distance;
+                this->delta_y -= distance;
                 break;
             case DOWN:
                 this->y += distance = this->speed * *delta * 80;
-                if (this->collision()) this->y -= distance;
+                this->delta_y += distance;
                 break;
             default:
                 break;
@@ -232,11 +327,11 @@ void Player::move(Direction direction) {
         switch (direction) {
             case RIGHT:
                 this->x += distance = this->speed * *delta * 100;
-                if (this->collision()) this->x -= distance;
+                this->delta_x += distance;
                 break;
             case LEFT:
                 this->x -= distance = this->speed * *delta * 100;
-                if (this->collision()) this->x += distance;
+                this->delta_x -= distance;
                 break;
             default:
                 break;
@@ -244,8 +339,10 @@ void Player::move(Direction direction) {
     }
 
     this->direction = direction;
-    this->moving = 1;
-    this->animate();
+    if (distance) {
+        this->moving = 1;
+        this->animate();
+    }
 }
 
 // main
@@ -325,20 +422,7 @@ extern "C"
     };
     SDL_SetColorKey(charset, true, 0x000000);
 
-    if (load_image_into_surface(&eti, "eti", &sdl_obj) != 0) {
-        return 1;
-    }
-
     char text[128];
-    SPRITESHEET_T spritesheet;
-    for (int i = 0; i < 9; i++) {
-        sprintf(text, "Player/%d", i);
-        if (load_image_into_surface(&(spritesheet.sprite[i]), text, &sdl_obj) !=
-            0) {
-            return 1;
-        }
-    }
-
     int czarny = SDL_MapRGB(screen->format, 0x00, 0x00, 0x00);
     int zielony = SDL_MapRGB(screen->format, 0x00, 0xFF, 0x00);
     int czerwony = SDL_MapRGB(screen->format, 0xFF, 0x00, 0x00);
@@ -355,8 +439,33 @@ extern "C"
     distance = 0;
     etiSpeed = 1;
 
-    Player player(SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2, &delta, &spritesheet,
-                  &frameCounter);
+    if (load_image_into_surface(&eti, "eti", &sdl_obj) != 0) {
+        return 1;
+    }
+
+    OBJECT *objectList[MAX_OBJECTS];
+    int objectListMaxIndex = 0;
+
+    SPRITESHEET_T etiSheet;
+    if (load_image_into_surface(&(etiSheet.sprite[0]), "eti", &sdl_obj) != 0) {
+        return 1;
+    }
+
+    OBJECT etiObject(PLATFORM, SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2, &etiSheet,
+                     &frameCounter);
+    objectList[objectListMaxIndex++] = &etiObject;
+
+    SPRITESHEET_T palyerSheet;
+    for (int i = 0; i < 9; i++) {
+        sprintf(text, "Player/%d", i);
+        if (load_image_into_surface(&(palyerSheet.sprite[i]), text, &sdl_obj) !=
+            0) {
+            return 1;
+        }
+    }
+
+    Player player(SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2, &delta, &palyerSheet,
+                  &frameCounter, objectList, objectListMaxIndex);
 
     while (!quit) {
         t2 = SDL_GetTicks();
@@ -413,7 +522,12 @@ extern "C"
         DrawString(screen, screen->w / 2 - strlen(text) * 8 / 2, 26, text,
                    charset);
 
-        player.draw(screen);
+        // rysowanie obiekt�w / drawing objects
+        for (int i = 0; i < objectListMaxIndex; i++) {
+            if (objectList[i] != NULL) objectList[i]->draw(screen);
+        }
+
+        player.nextFrame(screen);
 
         SDL_UpdateTexture(scrtex, NULL, screen->pixels, screen->pitch);
         //		SDL_RenderClear(renderer);
@@ -458,6 +572,8 @@ extern "C"
         if (keystate[SDL_SCANCODE_DOWN] || keystate[SDL_SCANCODE_S]) {
             player.move(DOWN);
         }
+
+        objectList[0]->x += delta * 10;
 
         frames++;
         frameCounter += delta * 200;
