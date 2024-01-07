@@ -5,3 +5,5 @@
 !szablon2vs19.sln
 !*vcxproj
 !*.code-workspace
+!*.gitignore
+!./Images/Player/*.bmp

@@ -11,6 +11,16 @@ extern "C" {
 #define SCREEN_WIDTH 640
 #define SCREEN_HEIGHT 480
 
+#define padding_top 24
+#define padding_bottom 16
+#define padding_left 16
+#define padding_right 16
+
+#define start_x padding_left
+#define start_y (40 + padding_top)
+#define end_x (SCREEN_WIDTH - (padding_left + padding_right))
+#define end_y (SCREEN_HEIGHT - (32 + 40 + padding_top + padding_bottom))
+
 // narysowanie napisu txt na powierzchni screen, zaczynaj�c od punktu (x, y)
 // charset to bitmapa 128x128 zawieraj�ca znaki
 // draw a text txt on surface screen, starting from the point (x, y)
@@ -135,6 +145,7 @@ class Player {
     int curent_sprite = 0;
     Direction direction = RIGHT;
     double *frameCounter;
+    int anim_cycle = 0;
 
    public:
     int ladder_state = 0;
@@ -144,7 +155,6 @@ class Player {
     double y = 0;
     // void jump();
     // void gravity();
-    // void collision();
     Player(int x, int y, double *delta, SPRITESHEET_T *sheet,
            double *frameCounter) {
         this->x = (double)x;
@@ -156,8 +166,18 @@ class Player {
     void draw(SDL_Surface *screen);
     void move(Direction direction);
     void animate();
+    int collision();
 };
+int Player::collision() {
+    if (this->x - this->sheet->sprite[0]->w / 2 < start_x) return 1;
+    if (this->x + this->sheet->sprite[0]->w / 2 > end_x) return 1;
+    if (this->y - this->sheet->sprite[0]->h / 2 < start_y) return 1;
+    if (this->y + this->sheet->sprite[0]->h / 2 > end_y) return 1;
+
+    return 0;
+}
 void Player::draw(SDL_Surface *screen) {
+    if (this->collision()) this->curent_sprite = 8;
     DrawSurface(screen, this->sheet->sprite[this->curent_sprite], this->x,
                 this->y);
 }
@@ -170,10 +190,7 @@ void Player::animate() {
     if (this->ladder_state) {
         if (*frameCounter >= 80 && this->moving) {
             *frameCounter = 0;
-            this->curent_sprite++;
-            if (this->curent_sprite > 7) {
-                this->curent_sprite = 6;
-            }
+            this->curent_sprite = this->curent_sprite == 7 ? 6 : 7;
         } else if (!this->moving) {
             this->curent_sprite = 6;
         }
@@ -183,37 +200,30 @@ void Player::animate() {
 
     if (this->moving == 0) {
         this->curent_sprite = 0;
-        if (this->direction == RIGHT) {
-            this->curent_sprite = 3;
-        }
+        if (this->direction == RIGHT) this->curent_sprite = 3;
+
         return;
     }
     if (*frameCounter >= 30) {
         *frameCounter = 0;
-        if (this->direction == LEFT) {
-            this->curent_sprite++;
-            if (this->curent_sprite > 1) {
-                this->curent_sprite = 0;
-            }
-        } else if (this->direction == RIGHT) {
-            if (this->curent_sprite < 3) this->curent_sprite = 3;
-            this->curent_sprite++;
-            if (this->curent_sprite > 4) {
-                this->curent_sprite = 3;
-            }
-        }
+        if (this->direction == LEFT)
+            this->curent_sprite = this->curent_sprite == 2 ? 0 : 2;
+        else
+            this->curent_sprite = this->curent_sprite == 5 ? 3 : 5;
     }
 }
 void Player::move(Direction direction) {
     if (this->dead_state) return;
-
+    double distance = 0;
     if (this->ladder_state) {
         switch (direction) {
             case UP:
-                this->y -= this->speed * *delta * 80;
+                this->y -= distance = this->speed * *delta * 80;
+                if (this->collision()) this->y += distance;
                 break;
             case DOWN:
-                this->y += this->speed * *delta * 80;
+                this->y += distance = this->speed * *delta * 80;
+                if (this->collision()) this->y -= distance;
                 break;
             default:
                 break;
@@ -221,15 +231,18 @@ void Player::move(Direction direction) {
     } else {
         switch (direction) {
             case RIGHT:
-                this->x += this->speed * *delta * 100;
+                this->x += distance = this->speed * *delta * 100;
+                if (this->collision()) this->x -= distance;
                 break;
             case LEFT:
-                this->x -= this->speed * *delta * 100;
+                this->x -= distance = this->speed * *delta * 100;
+                if (this->collision()) this->x += distance;
                 break;
             default:
                 break;
         }
     }
+
     this->direction = direction;
     this->moving = 1;
     this->animate();
@@ -273,8 +286,8 @@ extern "C"
     }
 
     // tryb pe�noekranowy / fullscreen mode
-    //	rc = SDL_CreateWindowAndRenderer(0, 0, SDL_WINDOW_FULLSCREEN_DESKTOP,
-    //	                                 &window, &renderer);
+    //	rc = SDL_CreateWindowAndRenderer(0, 0,
+    // SDL_WINDOW_FULLSCREEN_DESKTOP, &window, &renderer);
     rc = SDL_CreateWindowAndRenderer(SCREEN_WIDTH, SCREEN_HEIGHT, 0, &window,
                                      &renderer);
     if (rc != 0) {
@@ -363,17 +376,6 @@ extern "C"
 
         SDL_FillRect(screen, NULL, granatowy);
 
-        const int padding_top = 24;
-        const int padding_bottom = 16;
-        const int padding_left = 16;
-        const int padding_right = 16;
-
-        const int start_x = padding_left;
-        const int start_y = 40 + padding_top;
-        const int end_x = SCREEN_WIDTH - (padding_left + padding_right);
-        const int end_y =
-            SCREEN_HEIGHT - (32 + 40 + padding_top + padding_bottom);
-
         DrawRectangle(screen, start_x, start_y, end_x, end_y, niebieski,
                       czarny);
 
@@ -395,7 +397,8 @@ extern "C"
 
         // tekst informacyjny / info text
         DrawRectangle(screen, 4, 4, SCREEN_WIDTH - 8, 36, czerwony, niebieski);
-        //            "template for the second project, elapsed time = %.1lf s
+        //            "template for the second project, elapsed time = %.1lf
+        //            s
         //            %.0lf frames / s"
 
         sprintf(text,
@@ -417,8 +420,8 @@ extern "C"
         SDL_RenderCopy(renderer, scrtex, NULL, NULL);
         SDL_RenderPresent(renderer);
 
-        // obs�uga zdarze� (o ile jakie� zasz�y) / handling of events (if there
-        // were any)
+        // obs�uga zdarze� (o ile jakie� zasz�y) / handling of events (if
+        // there were any)
 
         while (SDL_PollEvent(&event)) {
             switch (event.type) {
