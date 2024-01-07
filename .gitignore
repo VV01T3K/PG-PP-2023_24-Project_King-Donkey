@@ -1,9 +1,7 @@
-*
-!*.cpp
-!*.h
-!*.bmp
-!szablon2vs19.sln
-!*vcxproj
-!*.code-workspace
-!*.gitignore
-!./Images/Player/*.bmp
+.vs
+Debug
+Release
+SDL2-2.0.10
+x64
+comp
+libSDL2.a
