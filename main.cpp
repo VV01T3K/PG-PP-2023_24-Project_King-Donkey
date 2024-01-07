@@ -134,7 +134,7 @@ class Player {
     SPRITESHEET_T *sheet;
     int curent_sprite = 0;
     Direction direction = RIGHT;
-    int *frameCounter;
+    double *frameCounter;
 
    public:
     int ladder_state = 0;
@@ -146,7 +146,7 @@ class Player {
     // void gravity();
     // void collision();
     Player(int x, int y, double *delta, SPRITESHEET_T *sheet,
-           int *frameCounter) {
+           double *frameCounter) {
         this->x = (double)x;
         this->y = (double)y;
         this->delta = delta;
@@ -168,7 +168,7 @@ void Player::animate() {
     }
 
     if (this->ladder_state) {
-        if (*frameCounter >= 100 && this->moving) {
+        if (*frameCounter >= 80 && this->moving) {
             *frameCounter = 0;
             this->curent_sprite++;
             if (this->curent_sprite > 7) {
@@ -188,7 +188,7 @@ void Player::animate() {
         }
         return;
     }
-    if (*frameCounter >= 50) {
+    if (*frameCounter >= 30) {
         *frameCounter = 0;
         if (this->direction == LEFT) {
             this->curent_sprite++;
@@ -210,10 +210,10 @@ void Player::move(Direction direction) {
     if (this->ladder_state) {
         switch (direction) {
             case UP:
-                this->y -= this->speed * *delta * 100;
+                this->y -= this->speed * *delta * 80;
                 break;
             case DOWN:
-                this->y += this->speed * *delta * 100;
+                this->y += this->speed * *delta * 80;
                 break;
             default:
                 break;
@@ -243,7 +243,7 @@ extern "C"
     int
     main(int argc, char **argv) {
     int t1, t2, quit, frames, rc;
-    int frameCounter = 0;
+    double frameCounter = 0;
     double delta, worldTime, fpsTimer, fps, distance, etiSpeed;
     SDL_Event event;
     SDL_Surface *screen, *charset;
@@ -457,7 +457,9 @@ extern "C"
         }
 
         frames++;
-        frameCounter++;
+        frameCounter += delta * 200;
+        if (frameCounter > 1000) frameCounter = 0;
+
         player.animate();
     };
 
