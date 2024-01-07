@@ -131,36 +131,78 @@ class Player {
     double speed = 1.5;
     double *delta;
     int jump_state = 0;
-    int ladder_state = 0;
-    int dead_state = 0;
     SPRITESHEET_T *sheet;
     int curent_sprite = 0;
     Direction direction = RIGHT;
+    int *frameCounter;
 
    public:
+    int ladder_state = 0;
+    int dead_state = 0;
+    int moving = 0;
     double x = 0;
     double y = 0;
     // void jump();
     // void gravity();
     // void collision();
-    Player(int x, int y, double *delta, SPRITESHEET_T *sheet) {
+    Player(int x, int y, double *delta, SPRITESHEET_T *sheet,
+           int *frameCounter) {
         this->x = (double)x;
         this->y = (double)y;
         this->delta = delta;
         this->sheet = sheet;
+        this->frameCounter = frameCounter;
     }
     void draw(SDL_Surface *screen);
     void move(Direction direction);
-    void animate() {
-        this->curent_sprite++;
-        if (this->curent_sprite > 8) {
-            this->curent_sprite = 0;
-        }
-    }
+    void animate();
 };
 void Player::draw(SDL_Surface *screen) {
     DrawSurface(screen, this->sheet->sprite[this->curent_sprite], this->x,
                 this->y);
+}
+void Player::animate() {
+    if (this->dead_state) {
+        this->curent_sprite = 8;
+        return;
+    }
+
+    if (this->ladder_state) {
+        if (*frameCounter >= 100 && this->moving) {
+            *frameCounter = 0;
+            this->curent_sprite++;
+            if (this->curent_sprite > 7) {
+                this->curent_sprite = 6;
+            }
+        } else if (!this->moving) {
+            this->curent_sprite = 6;
+        }
+
+        return;
+    }
+
+    if (this->moving == 0) {
+        this->curent_sprite = 0;
+        if (this->direction == RIGHT) {
+            this->curent_sprite = 3;
+        }
+        return;
+    }
+    if (*frameCounter >= 50) {
+        *frameCounter = 0;
+        if (this->direction == LEFT) {
+            this->curent_sprite++;
+            if (this->curent_sprite > 1) {
+                this->curent_sprite = 0;
+            }
+        } else if (this->direction == RIGHT) {
+            if (this->curent_sprite < 3) this->curent_sprite = 3;
+            this->curent_sprite++;
+            if (this->curent_sprite > 4) {
+                this->curent_sprite = 3;
+            }
+        }
+    }
 }
 void Player::move(Direction direction) {
     if (this->dead_state) return;
@@ -188,6 +230,9 @@ void Player::move(Direction direction) {
                 break;
         }
     }
+    this->direction = direction;
+    this->moving = 1;
+    this->animate();
 }
 
 // main
@@ -297,7 +342,8 @@ extern "C"
     distance = 0;
     etiSpeed = 1;
 
-    Player player(SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2, &delta, &spritesheet);
+    Player player(SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2, &delta, &spritesheet,
+                  &frameCounter);
 
     while (!quit) {
         t2 = SDL_GetTicks();
@@ -382,14 +428,20 @@ extern "C"
                     else if (event.key.keysym.sym == SDLK_n) {
                         worldTime = 0;
                         distance = 0;
+                    } else if (event.key.keysym.sym == SDLK_1) {
+                        player.ladder_state = player.ladder_state ? 0 : 1;
+                    } else if (event.key.keysym.sym == SDLK_2) {
+                        player.dead_state = player.dead_state ? 0 : 1;
                     }
+                    // else if (event.key.keysym.sym == SDLK_3) {
+                    // }
                     break;
                 case SDL_QUIT:
                     quit = 1;
                     break;
             };
         };
-
+        player.moving = 0;
         keystate = SDL_GetKeyboardState(NULL);
         if (keystate[SDL_SCANCODE_RIGHT] || keystate[SDL_SCANCODE_D]) {
             player.move(RIGHT);
@@ -406,10 +458,7 @@ extern "C"
 
         frames++;
         frameCounter++;
-        if (frameCounter >= 40) {
-            player.animate();
-            frameCounter = 0;
-        }
+        player.animate();
     };
 
     // zwolnienie powierzchni / freeing all surfaces
