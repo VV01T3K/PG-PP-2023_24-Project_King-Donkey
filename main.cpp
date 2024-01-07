@@ -198,7 +198,8 @@ class Player {
     int jump_state = 0;
     int curent_sprite = 0;
     int anim_cycle = 0;
-    float gravity = 2.5;
+    double gravity = 1.5;
+    double gravity_delta = 0;
     double delta_x = 0;
     double delta_y = 0;
 
@@ -242,10 +243,10 @@ double Player::getBORDER(Direction side) {
     }
 }
 void Player::nextFrame(SDL_Surface *screen) {
+    this->gravity_delta = 0;
     if (this->ladder_state == 0) {
-        double gravity = this->gravity * *delta * 100;
-        this->y += gravity;
-        this->delta_y += gravity;
+        this->gravity_delta = this->gravity * *delta * 100;
+        this->y += this->gravity_delta;
     }
 
     this->collision();
@@ -259,13 +260,34 @@ void Player::collision() {
     int horizontalSTOP = 0, verticalSTOP = 0;
     int UNALIVE = 0;
     // check for collision with screen borders
-    if (this->getBORDER(LEFT) < start_x) (horizontalSTOP = 1);
-    if (this->getBORDER(RIGHT) > end_x + start_x) (horizontalSTOP = 1);
-    if (this->getBORDER(UP) < start_y) (verticalSTOP = 1);
-    if (this->getBORDER(DOWN) > end_y + start_y) (verticalSTOP = 1);
+    if (this->getBORDER(LEFT) < start_x) horizontalSTOP = 1;
+    if (this->getBORDER(RIGHT) > end_x + start_x) horizontalSTOP = 1;
+    if (this->getBORDER(UP) < start_y) verticalSTOP = 1;
+    if (this->getBORDER(DOWN) > end_y + start_y) {
+        verticalSTOP = 1;
+        this->y -= this->gravity_delta;
+    }
 
     // check for collision with objects
-    // ....
+    for (int i = 0; i < this->objectListSize; i++) {
+        if (this->objectList[i] == NULL) continue;
+        if (this->objectList[i]->type == NOTHING) continue;
+        if (this->objectList[i]->type == PLATFORM) {
+            if (this->getBORDER(DOWN) > this->objectList[i]->getBORDER(UP) &&
+                this->getBORDER(LEFT) < this->objectList[i]->getBORDER(RIGHT) &&
+                this->getBORDER(RIGHT) > this->objectList[i]->getBORDER(LEFT) &&
+                this->getBORDER(UP) < this->objectList[i]->getBORDER(DOWN)) {
+                this->y -= this->gravity_delta;
+            }
+            if (this->getBORDER(DOWN) > this->objectList[i]->getBORDER(UP) &&
+                this->getBORDER(LEFT) < this->objectList[i]->getBORDER(RIGHT) &&
+                this->getBORDER(RIGHT) > this->objectList[i]->getBORDER(LEFT) &&
+                this->getBORDER(UP) < this->objectList[i]->getBORDER(DOWN)) {
+                horizontalSTOP = 1;
+                this->y += this->gravity_delta;
+            }
+        }
+    }
 
     // EVENTS
     if (UNALIVE) this->dead_state = 1;
@@ -451,7 +473,7 @@ extern "C"
         return 1;
     }
 
-    OBJECT etiObject(PLATFORM, SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2, &etiSheet,
+    OBJECT etiObject(PLATFORM, SCREEN_WIDTH / 2, SCREEN_HEIGHT / 1.2, &etiSheet,
                      &frameCounter);
     objectList[objectListMaxIndex++] = &etiObject;
 
@@ -464,8 +486,13 @@ extern "C"
         }
     }
 
-    Player player(SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2, &delta, &palyerSheet,
+    Player player(SCREEN_WIDTH / 2, SCREEN_HEIGHT / 3, &delta, &palyerSheet,
                   &frameCounter, objectList, objectListMaxIndex);
+
+    printf("%f\n", etiObject.getBORDER(LEFT));
+    printf("%f\n", etiObject.getBORDER(RIGHT));
+    printf("%f\n", etiObject.getBORDER(UP));
+    printf("%f\n", etiObject.getBORDER(DOWN));
 
     while (!quit) {
         t2 = SDL_GetTicks();
@@ -573,7 +600,7 @@ extern "C"
             player.move(DOWN);
         }
 
-        objectList[0]->x += delta * 10;
+        // objectList[0]->x += delta * 10;
 
         frames++;
         frameCounter += delta * 200;
