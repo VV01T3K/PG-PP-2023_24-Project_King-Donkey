@@ -84,7 +84,10 @@ void DrawRectangle(SDL_Surface *screen, int x, int y, int l, int k,
         DrawLine(screen, x + 1, i, l - 2, 1, 0, fillColor);
 };
 
-#define MAX_OBJECTS 10
+#define MAX_OBJECTS 30
+typedef struct {
+    SDL_Surface *sprite[9];
+} SPRITESHEET_T;
 typedef struct {
     SDL_Surface *surfaces[MAX_OBJECTS];
     SDL_Texture *textures[MAX_OBJECTS];
@@ -121,7 +124,7 @@ int load_image_into_surface(SDL_Surface **surface, const char *image_path,
 
     return 0;
 }
-
+enum Direction { RIGHT, LEFT, UP, DOWN };
 class Player {
    private:
     int collison_state = 0;
@@ -130,24 +133,34 @@ class Player {
     int jump_state = 0;
     int ladder_state = 0;
     int dead_state = 0;
+    SPRITESHEET_T *sheet;
+    int curent_sprite = 0;
+    Direction direction = RIGHT;
 
    public:
-    enum Direction { RIGHT, LEFT, UP, DOWN };
     double x = 0;
     double y = 0;
     // void jump();
     // void gravity();
     // void collision();
-    void draw(SDL_Surface *screen, SDL_Surface *texture);
-    Player(int x, int y, double *delta) {
+    Player(int x, int y, double *delta, SPRITESHEET_T *sheet) {
         this->x = (double)x;
         this->y = (double)y;
         this->delta = delta;
+        this->sheet = sheet;
     }
+    void draw(SDL_Surface *screen);
     void move(Direction direction);
+    void animate() {
+        this->curent_sprite++;
+        if (this->curent_sprite > 8) {
+            this->curent_sprite = 0;
+        }
+    }
 };
-void Player::draw(SDL_Surface *screen, SDL_Surface *texture) {
-    DrawSurface(screen, texture, this->x, this->y);
+void Player::draw(SDL_Surface *screen) {
+    DrawSurface(screen, this->sheet->sprite[this->curent_sprite], this->x,
+                this->y);
 }
 void Player::move(Direction direction) {
     if (this->dead_state) return;
@@ -185,6 +198,7 @@ extern "C"
     int
     main(int argc, char **argv) {
     int t1, t2, quit, frames, rc;
+    int frameCounter = 0;
     double delta, worldTime, fpsTimer, fps, distance, etiSpeed;
     SDL_Event event;
     SDL_Surface *screen, *charset;
@@ -194,8 +208,6 @@ extern "C"
     SDL_Renderer *renderer;
 
     const Uint8 *keystate;
-
-    SDL_Surface *player_stand_left;
 
     SDL_OBJECTS_T sdl_obj;
 
@@ -258,11 +270,17 @@ extern "C"
     if (load_image_into_surface(&eti, "eti", &sdl_obj) != 0) {
         return 1;
     }
-    if (load_image_into_surface(&player_stand_left, "player", &sdl_obj) != 0) {
-        return 1;
-    }
 
     char text[128];
+    SPRITESHEET_T spritesheet;
+    for (int i = 0; i < 9; i++) {
+        sprintf(text, "Player/%d", i);
+        if (load_image_into_surface(&(spritesheet.sprite[i]), text, &sdl_obj) !=
+            0) {
+            return 1;
+        }
+    }
+
     int czarny = SDL_MapRGB(screen->format, 0x00, 0x00, 0x00);
     int zielony = SDL_MapRGB(screen->format, 0x00, 0xFF, 0x00);
     int czerwony = SDL_MapRGB(screen->format, 0xFF, 0x00, 0x00);
@@ -279,7 +297,7 @@ extern "C"
     distance = 0;
     etiSpeed = 1;
 
-    Player player(SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2, &delta);
+    Player player(SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2, &delta, &spritesheet);
 
     while (!quit) {
         t2 = SDL_GetTicks();
@@ -346,7 +364,7 @@ extern "C"
         DrawString(screen, screen->w / 2 - strlen(text) * 8 / 2, 26, text,
                    charset);
 
-        player.draw(screen, player_stand_left);
+        player.draw(screen);
 
         SDL_UpdateTexture(scrtex, NULL, screen->pixels, screen->pitch);
         //		SDL_RenderClear(renderer);
@@ -374,19 +392,24 @@ extern "C"
 
         keystate = SDL_GetKeyboardState(NULL);
         if (keystate[SDL_SCANCODE_RIGHT] || keystate[SDL_SCANCODE_D]) {
-            player.move(Player::RIGHT);
+            player.move(RIGHT);
         }
         if (keystate[SDL_SCANCODE_LEFT] || keystate[SDL_SCANCODE_A]) {
-            player.move(Player::LEFT);
+            player.move(LEFT);
         }
         if (keystate[SDL_SCANCODE_UP] || keystate[SDL_SCANCODE_W]) {
-            player.move(Player::UP);
+            player.move(UP);
         }
         if (keystate[SDL_SCANCODE_DOWN] || keystate[SDL_SCANCODE_S]) {
-            player.move(Player::DOWN);
+            player.move(DOWN);
         }
 
         frames++;
+        frameCounter++;
+        if (frameCounter >= 40) {
+            player.animate();
+            frameCounter = 0;
+        }
     };
 
     // zwolnienie powierzchni / freeing all surfaces
