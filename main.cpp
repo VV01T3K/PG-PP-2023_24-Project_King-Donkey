@@ -175,6 +175,7 @@ class Player : public OBJECT {
     double delta_x = 0;
     double delta_y = 0;
     START_VALUES_PLAYER_T starting_values;
+    GAME_T *GAME;
 
    public:
     int ladder_possible = 0;
@@ -185,10 +186,11 @@ class Player : public OBJECT {
     int moving = 0;
     int falling = 1;
     Player(double *delta, SPRITESHEET_T *sheet, OBJECT **objectList,
-           int objectListSize)
+           int objectListSize, GAME_T *GAME)
         : OBJECT(0, 0, delta, sheet),
           objectList(objectList),
-          objectListSize(objectListSize) {
+          objectListSize(objectListSize),
+          GAME(GAME) {
         this->gravity = this->max_gravity;
 
         starting_values.ladder_possible = ladder_possible;
@@ -557,7 +559,9 @@ extern "C"
             new OBJECT(LADDER_TOP, -1, &delta, &ladderSheet);
     }
 
-    Player player(&delta, &palyerSheet, objectList, objectListMaxIndex);
+    GAME_T GAME;
+
+    Player player(&delta, &palyerSheet, objectList, objectListMaxIndex, &GAME);
     player.place(0, 0);
 
     createLevel_1(objectList, objectListMaxIndex, player);
@@ -590,7 +594,9 @@ extern "C"
         sprintf(text, "Zaimplementowane: ");
         DrawString(screen, start_x, start_y - 16, text, charset);
 
-        sprintf(text, "Interfejs gry...");
+        sprintf(text,
+                "Interfejs gry: WIN:%d LOSE:%d SCORE:%d LIVES:%d LEVEL:%d",
+                GAME.win, GAME.lose, GAME.score, GAME.lives, GAME.level);
         DrawString(screen, start_x + 8, SCREEN_HEIGHT - 32, text, charset);
 
         // tekst informacyjny / info text

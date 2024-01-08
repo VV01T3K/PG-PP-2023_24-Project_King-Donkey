@@ -56,3 +56,12 @@ typedef struct {
     int moving = 0;
     int falling = 1;
 } START_VALUES_PLAYER_T;
+
+typedef struct {
+    int win = 0;
+    int lose = 0;
+    int score = 0;
+    int lives = 3;
+    int level = 1;
+    int level_max = 3;
+} GAME_T;
