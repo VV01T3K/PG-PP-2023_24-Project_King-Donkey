@@ -100,14 +100,6 @@ int load_image_into_surface(SDL_Surface **surface, const char *image_path,
 
     return 0;
 }
-
-typedef struct {
-    int left;
-    int right;
-    int top;
-    int bottom;
-} BORDERS_T;
-
 class OBJECT {
    public:
     SPRITESHEET_T *sheet;
@@ -118,15 +110,28 @@ class OBJECT {
     double *delta;
     double x = 0;
     double y = 0;
+    START_VALUES_OBJECT_T start_values;
 
     OBJECT(int type, double x, double y, double *delta, SPRITESHEET_T *sheet)
         : type(type), x(x), y(y), sheet(sheet), delta(delta) {
         if (type == LADDER_TOP) this->curent_sprite = 1;
+
+        start_values.x = x;
+        start_values.y = y;
+        start_values.curent_sprite = curent_sprite;
+        start_values.anim_cycle = anim_cycle;
     }
 
     void draw(SDL_Surface *screen);
     double getBORDER(Direction side);
+    void reset();
 };
+void OBJECT::reset() {
+    x = start_values.x;
+    y = start_values.y;
+    curent_sprite = start_values.curent_sprite;
+    anim_cycle = start_values.anim_cycle;
+}
 double OBJECT::getBORDER(Direction side) {
     switch (side) {
         case RIGHT:
@@ -157,6 +162,7 @@ class Player : public OBJECT {
     double gravity_delta = 0;
     double delta_x = 0;
     double delta_y = 0;
+    START_VALUES_PLAYER_T starting_values;
 
    public:
     int ladder_possible = 0;
@@ -172,6 +178,14 @@ class Player : public OBJECT {
           objectList(objectList),
           objectListSize(objectListSize) {
         this->gravity = this->max_gravity;
+
+        starting_values.ladder_possible = ladder_possible;
+        starting_values.ladder_state = ladder_state;
+        starting_values.ladder_top = ladder_top;
+        starting_values.dead_state = dead_state;
+        starting_values.jump_state = jump_state;
+        starting_values.moving = moving;
+        starting_values.falling = falling;
     }
 
     void move(Direction direction);
@@ -179,7 +193,18 @@ class Player : public OBJECT {
     void collision();
     void nextFrame(SDL_Surface *screen);
     void jump();
+    void reset();
 };
+void Player::reset() {
+    OBJECT::reset();
+    ladder_possible = starting_values.ladder_possible;
+    ladder_state = starting_values.ladder_state;
+    ladder_top = starting_values.ladder_top;
+    dead_state = starting_values.dead_state;
+    jump_state = starting_values.jump_state;
+    moving = starting_values.moving;
+    falling = starting_values.falling;
+}
 void Player::jump() {
     if (jump_state || ladder_state || dead_state || falling) return;
     jump_state = 1;
@@ -361,8 +386,7 @@ extern "C"
     int
     main(int argc, char **argv) {
     int t1, t2, quit, frames, rc;
-    double frameCounter = 0;
-    double delta, worldTime, fpsTimer, fps, distance;
+    double delta, worldTime, fpsTimer, fps;
     SDL_Event event;
     SDL_Surface *screen, *charset;
     SDL_Texture *scrtex;
@@ -443,7 +467,6 @@ extern "C"
     fps = 0;
     quit = 0;
     worldTime = 0;
-    distance = 0;
 
     OBJECT *objectList[MAX_OBJECTS];
     int objectListMaxIndex = 0;
@@ -577,7 +600,10 @@ extern "C"
                         quit = 1;
                     else if (event.key.keysym.sym == SDLK_n) {
                         worldTime = 0;
-                        distance = 0;
+                        player.reset();
+                        for (int i = 0; i < objectListMaxIndex; i++) {
+                            if (objectList[i] != NULL) objectList[i]->reset();
+                        }
                     }
                     break;
                 case SDL_QUIT:

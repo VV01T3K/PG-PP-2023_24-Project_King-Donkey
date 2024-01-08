@@ -34,3 +34,18 @@ enum Direction { RIGHT, LEFT, UP, DOWN };
 enum ObjectType { NOTHING, BORDER, LADDER, LADDER_TOP, PLATFORM, ENEMY };
 
 #define JUMP_HEIGHT 1
+typedef struct {
+    int curent_sprite = 0;
+    int anim_cycle = 0;
+    double x = 0;
+    double y = 0;
+} START_VALUES_OBJECT_T;
+typedef struct {
+    int ladder_possible = 0;
+    int ladder_state = 0;
+    int ladder_top = 0;
+    int dead_state = 0;
+    int jump_state = 0;
+    int moving = 0;
+    int falling = 1;
+} START_VALUES_PLAYER_T;
