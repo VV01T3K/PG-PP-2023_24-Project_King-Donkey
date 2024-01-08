@@ -96,7 +96,7 @@ void DrawRectangle(SDL_Surface *screen, int x, int y, int l, int k,
 
 #define MAX_SURFACES 30
 #define MAX_TEXTURES 5
-#define MAX_OBJECTS 50
+#define MAX_OBJECTS 500
 typedef struct {
     SDL_Surface *sprite[9];
 } SPRITESHEET_T;
@@ -137,7 +137,7 @@ int load_image_into_surface(SDL_Surface **surface, const char *image_path,
     return 0;
 }
 enum Direction { RIGHT, LEFT, UP, DOWN };
-enum ObjectType { NOTHING, BORDER, LADDER, PLATFORM, ENEMY };
+enum ObjectType { NOTHING, BORDER, LADDER, LADDER_TOP, PLATFORM, ENEMY };
 
 typedef struct {
     int left;
@@ -163,7 +163,9 @@ class OBJECT {
     // Overloaded constructor
     OBJECT(int type, double x, double y, SPRITESHEET_T *sheet,
            double *frameCounter)
-        : type(type), x(x), y(y), sheet(sheet), frameCounter(frameCounter) {}
+        : type(type), x(x), y(y), sheet(sheet), frameCounter(frameCounter) {
+        if (type == LADDER_TOP) this->curent_sprite = 1;
+    }
 
     void draw(SDL_Surface *screen);
     double getBORDER(Direction side);
@@ -195,17 +197,20 @@ class Player {
     double *frameCounter;
     Direction direction = RIGHT;
     double speed = 1.5;
-    int jump_state = 0;
     int curent_sprite = 0;
     int anim_cycle = 0;
-    double gravity = 1.5;
+    double max_gravity = 4;
+    double gravity;
     double gravity_delta = 0;
     double delta_x = 0;
     double delta_y = 0;
 
    public:
+    int ladder_possible = 0;
     int ladder_state = 0;
+    int ladder_top = 0;
     int dead_state = 0;
+    int jump_state = 0;
     int moving = 0;
     double x = 0;
     double y = 0;
@@ -219,7 +224,9 @@ class Player {
           sheet(sheet),
           frameCounter(frameCounter),
           x(x),
-          y(y) {}
+          y(y) {
+        this->gravity = this->max_gravity;
+    }
 
     void draw(SDL_Surface *screen);
     void move(Direction direction);
@@ -227,7 +234,13 @@ class Player {
     void collision();
     void nextFrame(SDL_Surface *screen);
     double getBORDER(Direction side);
+    void jump();
 };
+void Player::jump() {
+    if (this->jump_state || this->ladder_state || this->dead_state) return;
+    this->jump_state = 1;
+    this->gravity = -5;
+}
 double Player::getBORDER(Direction side) {
     switch (side) {
         case RIGHT:
@@ -243,11 +256,18 @@ double Player::getBORDER(Direction side) {
     }
 }
 void Player::nextFrame(SDL_Surface *screen) {
+    if (this->gravity < max_gravity || !this->jump_state)
+        this->gravity += *delta * max_gravity * 4;
+
+    double gravity_distance = this->gravity * *delta * 100;
+
     this->gravity_delta = 0;
     if (this->ladder_state == 0) {
-        this->gravity_delta = this->gravity * *delta * 100;
-        this->y += this->gravity_delta;
+        this->gravity_delta = gravity_distance;
+        this->y += gravity_distance;
     }
+    this->ladder_possible = 0;
+    this->ladder_top = 0;
 
     this->collision();
 
@@ -266,6 +286,7 @@ void Player::collision() {
     if (this->getBORDER(DOWN) > end_y + start_y) {
         verticalSTOP = 1;
         this->y -= this->gravity_delta;
+        this->jump_state = 0;
     }
 
     // check for collision with objects
@@ -278,6 +299,7 @@ void Player::collision() {
                 this->getBORDER(RIGHT) > this->objectList[i]->getBORDER(LEFT) &&
                 this->getBORDER(UP) < this->objectList[i]->getBORDER(DOWN)) {
                 this->y -= this->gravity_delta;
+                this->jump_state = 0;
             }
             if (this->getBORDER(DOWN) > this->objectList[i]->getBORDER(UP) &&
                 this->getBORDER(LEFT) < this->objectList[i]->getBORDER(RIGHT) &&
@@ -287,9 +309,34 @@ void Player::collision() {
                 this->y += this->gravity_delta;
             }
         }
+        if (this->objectList[i]->type == LADDER) {
+            if (this->getBORDER(DOWN) > this->objectList[i]->getBORDER(UP) &&
+                this->x < this->objectList[i]->getBORDER(RIGHT) &&
+                this->x > this->objectList[i]->getBORDER(LEFT) &&
+                this->getBORDER(UP) < this->objectList[i]->getBORDER(DOWN)) {
+                this->ladder_possible = 1;
+            }
+        }
+        if (this->objectList[i]->type == LADDER_TOP) {
+            if (this->getBORDER(DOWN) > this->objectList[i]->getBORDER(UP) &&
+                this->x < this->objectList[i]->getBORDER(RIGHT) &&
+                this->x > this->objectList[i]->getBORDER(LEFT) &&
+                this->getBORDER(UP) < this->objectList[i]->getBORDER(DOWN)) {
+                this->ladder_top = 1;
+            }
+        }
+        if (this->objectList[i]->type == ENEMY) {
+            if (this->getBORDER(DOWN) > this->objectList[i]->getBORDER(UP) &&
+                this->getBORDER(LEFT) < this->objectList[i]->getBORDER(RIGHT) &&
+                this->getBORDER(RIGHT) > this->objectList[i]->getBORDER(LEFT) &&
+                this->getBORDER(UP) < this->objectList[i]->getBORDER(DOWN)) {
+                UNALIVE = 1;
+            }
+        }
     }
 
     // EVENTS
+    if (!this->jump_state) this->gravity = this->max_gravity / 2;
     if (UNALIVE) this->dead_state = 1;
     if (horizontalSTOP) this->x -= this->delta_x;
     if (verticalSTOP) this->y -= this->delta_y;
@@ -301,6 +348,12 @@ void Player::draw(SDL_Surface *screen) {
 void Player::animate() {
     if (this->dead_state) {
         this->curent_sprite = 8;
+        return;
+    }
+    if (this->jump_state) {
+        this->curent_sprite = 1;
+        if (this->direction == RIGHT) this->curent_sprite = 4;
+
         return;
     }
 
@@ -376,10 +429,9 @@ extern "C"
     main(int argc, char **argv) {
     int t1, t2, quit, frames, rc;
     double frameCounter = 0;
-    double delta, worldTime, fpsTimer, fps, distance, etiSpeed;
+    double delta, worldTime, fpsTimer, fps, distance;
     SDL_Event event;
     SDL_Surface *screen, *charset;
-    SDL_Surface *eti;
     SDL_Texture *scrtex;
     SDL_Window *window;
     SDL_Renderer *renderer;
@@ -459,11 +511,6 @@ extern "C"
     quit = 0;
     worldTime = 0;
     distance = 0;
-    etiSpeed = 1;
-
-    if (load_image_into_surface(&eti, "eti", &sdl_obj) != 0) {
-        return 1;
-    }
 
     OBJECT *objectList[MAX_OBJECTS];
     int objectListMaxIndex = 0;
@@ -473,10 +520,6 @@ extern "C"
         return 1;
     }
 
-    OBJECT etiObject(PLATFORM, SCREEN_WIDTH / 2, SCREEN_HEIGHT / 1.2, &etiSheet,
-                     &frameCounter);
-    objectList[objectListMaxIndex++] = &etiObject;
-
     SPRITESHEET_T palyerSheet;
     for (int i = 0; i < 9; i++) {
         sprintf(text, "Player/%d", i);
@@ -485,14 +528,54 @@ extern "C"
             return 1;
         }
     }
+    SPRITESHEET_T ladderSheet;
+    for (int i = 0; i < 3; i++) {
+        sprintf(text, "Ladder/%d", i);
+        if (load_image_into_surface(&(ladderSheet.sprite[i]), text, &sdl_obj) !=
+            0) {
+            return 1;
+        }
+    }
+    SPRITESHEET_T barrelSheet;
+    for (int i = 0; i < 4; i++) {
+        sprintf(text, "Barrel/%d", i);
+        if (load_image_into_surface(&(barrelSheet.sprite[i]), text, &sdl_obj) !=
+            0) {
+            return 1;
+        }
+    }
+    SPRITESHEET_T platformSheet;
+    for (int i = 0; i < 3; i++) {
+        sprintf(text, "Platform/%d", i);
+        if (load_image_into_surface(&(platformSheet.sprite[i]), text,
+                                    &sdl_obj) != 0) {
+            return 1;
+        }
+    }
+
+    objectList[objectListMaxIndex++] =
+        new OBJECT(PLATFORM, SCREEN_WIDTH / 2, SCREEN_HEIGHT / 1.25,
+                   &platformSheet, &frameCounter);
+
+    objectList[objectListMaxIndex++] =
+        new OBJECT(LADDER, SCREEN_WIDTH / 2, SCREEN_HEIGHT / 1.2, &ladderSheet,
+                   &frameCounter);
+    objectList[objectListMaxIndex++] =
+        new OBJECT(LADDER, SCREEN_WIDTH / 2, SCREEN_HEIGHT / 1.15, &ladderSheet,
+                   &frameCounter);
+    objectList[objectListMaxIndex++] =
+        new OBJECT(LADDER, SCREEN_WIDTH / 2, SCREEN_HEIGHT / 1.25, &ladderSheet,
+                   &frameCounter);
+    objectList[objectListMaxIndex++] =
+        new OBJECT(LADDER_TOP, SCREEN_WIDTH / 2, SCREEN_HEIGHT / 1.30,
+                   &ladderSheet, &frameCounter);
+
+    objectList[objectListMaxIndex++] =
+        new OBJECT(ENEMY, SCREEN_WIDTH / 3, SCREEN_HEIGHT / 1.1, &barrelSheet,
+                   &frameCounter);
 
     Player player(SCREEN_WIDTH / 2, SCREEN_HEIGHT / 3, &delta, &palyerSheet,
                   &frameCounter, objectList, objectListMaxIndex);
-
-    printf("%f\n", etiObject.getBORDER(LEFT));
-    printf("%f\n", etiObject.getBORDER(RIGHT));
-    printf("%f\n", etiObject.getBORDER(UP));
-    printf("%f\n", etiObject.getBORDER(DOWN));
 
     while (!quit) {
         t2 = SDL_GetTicks();
@@ -508,16 +591,10 @@ extern "C"
 
         worldTime += delta;
 
-        distance += etiSpeed * delta;
-
         SDL_FillRect(screen, NULL, granatowy);
 
         DrawRectangle(screen, start_x, start_y, end_x, end_y, niebieski,
                       czarny);
-
-        DrawSurface(screen, eti,
-                    SCREEN_WIDTH / 2 + sin(distance) * SCREEN_HEIGHT / 3,
-                    SCREEN_HEIGHT / 2 + cos(distance) * SCREEN_HEIGHT / 3);
 
         fpsTimer += delta;
         if (fpsTimer > 0.5) {
@@ -572,13 +649,7 @@ extern "C"
                     else if (event.key.keysym.sym == SDLK_n) {
                         worldTime = 0;
                         distance = 0;
-                    } else if (event.key.keysym.sym == SDLK_1) {
-                        player.ladder_state = player.ladder_state ? 0 : 1;
-                    } else if (event.key.keysym.sym == SDLK_2) {
-                        player.dead_state = player.dead_state ? 0 : 1;
                     }
-                    // else if (event.key.keysym.sym == SDLK_3) {
-                    // }
                     break;
                 case SDL_QUIT:
                     quit = 1;
@@ -586,18 +657,35 @@ extern "C"
             };
         };
         player.moving = 0;
+
+        printf("%d\n", player.ladder_possible);
+
         keystate = SDL_GetKeyboardState(NULL);
         if (keystate[SDL_SCANCODE_RIGHT] || keystate[SDL_SCANCODE_D]) {
+            player.ladder_state = 0;
             player.move(RIGHT);
         }
         if (keystate[SDL_SCANCODE_LEFT] || keystate[SDL_SCANCODE_A]) {
+            player.ladder_state = 0;
             player.move(LEFT);
         }
         if (keystate[SDL_SCANCODE_UP] || keystate[SDL_SCANCODE_W]) {
+            if (player.ladder_possible)
+                player.ladder_state = 1;
+            else
+                player.ladder_state = 0;
             player.move(UP);
         }
         if (keystate[SDL_SCANCODE_DOWN] || keystate[SDL_SCANCODE_S]) {
+            if (player.ladder_possible)
+                player.ladder_state = 1;
+            else
+                player.ladder_state = 0;
+            if (player.ladder_top) player.ladder_state = 1;
             player.move(DOWN);
+        }
+        if (keystate[SDL_SCANCODE_SPACE]) {
+            player.jump();
         }
 
         // objectList[0]->x += delta * 10;
