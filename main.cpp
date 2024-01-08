@@ -249,10 +249,16 @@ void Player::collision() {
     int horizontalSTOP = 0, verticalSTOP = 0;
     int UNALIVE = 0;
     falling = 1;
+    int zatrzymantko = 0;
+    ladder_top = 0;
     // check for collision with screen borders
     if (getBORDER(LEFT) < start_x) horizontalSTOP = 1;
     if (getBORDER(RIGHT) > end_x + start_x) horizontalSTOP = 1;
-    if (getBORDER(UP) < start_y) verticalSTOP = 1;
+    if (getBORDER(UP) < start_y + 2) {
+        verticalSTOP = 1;
+        if (gravity < 0) gravity = 0;
+        zatrzymantko = 1;
+    }
     if (getBORDER(DOWN) > end_y + start_y) {
         verticalSTOP = 1;
         y -= gravity_delta;
@@ -260,8 +266,6 @@ void Player::collision() {
         falling = 0;
         UNALIVE = 1;
     }
-    int zatrzymantko = 0;
-    ladder_top = 0;
     // check for collision with objects
     for (int i = 0; i < objectListSize; i++) {
         if (objectList[i] == NULL) continue;
@@ -426,7 +430,7 @@ void createLevel_1(OBJECT **objectList, int max, Player &player) {
     objectList[NEXT(LADDER_SHORT)]->place(3, 3);
     objectList[NEXT(LADDER_TOP)]->place(3, 3);
 
-    objectList[WIN_]->place(-8, 5.5);
+    objectList[WIN_]->place(-6.5, 4);
 }
 void createLevel_2(OBJECT **objectList, int max, Player &player) {
     __BUILDLEVEL_PREPARE__
@@ -453,17 +457,37 @@ void createLevel_2(OBJECT **objectList, int max, Player &player) {
 
     objectList[NEXT(PLATFORM_SHORT)]->place(10, 4);
 
-    objectList[WIN_]->place(-8, 5.5);
+    objectList[WIN_]->place(-9.5, 5.5);
 }
 void createLevel_3(OBJECT **objectList, int max, Player &player) {
     __BUILDLEVEL_PREPARE__
 
     // MAX 10 objects of the same type
     // NEXT(OBJECT_TYPE) | place(x, y) each TILE_SIZE
-    player.place(0, 0);
-    objectList[NEXT(PLATFORM_SHORT)]->place(-10, -7);
+    player.place(-7, -5.5);
 
-    objectList[WIN_]->place(-8, 5.5);
+    objectList[NEXT(PLATFORM_LONG)]->place(4, -2);
+    objectList[NEXT(PLATFORM_SHORT)]->place(-9, -3);
+    objectList[NEXT(LADDER_MEDIUM)]->place(7, -2);
+    objectList[NEXT(LADDER_TOP)]->place(7, -2);
+
+    objectList[NEXT(PLATFORM_LONG)]->place(0, -7);
+
+    objectList[NEXT(PLATFORM_LONG)]->place(-4, 2);
+    objectList[NEXT(LADDER_SHORT)]->place(-4, 2);
+    objectList[NEXT(LADDER_TOP)]->place(-4, 2);
+    objectList[NEXT(LADDER_SHORT)]->place(1, 2);
+    objectList[NEXT(LADDER_TOP)]->place(1, 2);
+
+    objectList[NEXT(PLATFORM_MEDIUM)]->place(-6, 5);
+    objectList[NEXT(PLATFORM_MEDIUM)]->place(2, 5);
+
+    objectList[NEXT(LADDER_SHORT)]->place(-12, 5);
+    objectList[NEXT(LADDER_TOP)]->place(-12, 5);
+
+    objectList[NEXT(PLATFORM_SHORT)]->place(10, 4);
+
+    objectList[WIN_]->place(10.5, 5);
 }
 
 // main
@@ -633,7 +657,7 @@ extern "C"
     Player player(&delta, &palyerSheet, objectList, objectListMaxIndex, &GAME);
     player.place(0, 0);
 
-    createLevel_2(objectList, objectListMaxIndex, player);
+    createLevel_3(objectList, objectListMaxIndex, player);
 
     while (!quit) {
         t2 = SDL_GetTicks();
