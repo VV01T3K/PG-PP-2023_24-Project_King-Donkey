@@ -1,25 +1,4 @@
-#define _USE_MATH_DEFINES
-#include <math.h>
-#include <stdio.h>
-#include <string.h>
-
-extern "C" {
-#include "./SDL2-2.0.10/include/SDL.h"
-#include "./SDL2-2.0.10/include/SDL_main.h"
-}
-
-#define SCREEN_WIDTH 640
-#define SCREEN_HEIGHT 480
-
-#define padding_top 24
-#define padding_bottom 16
-#define padding_left 16
-#define padding_right 16
-
-#define start_x padding_left
-#define start_y (40 + padding_top)
-#define end_x (SCREEN_WIDTH - (padding_left + padding_right))
-#define end_y (SCREEN_HEIGHT - (32 + 40 + padding_top + padding_bottom))
+#include "header.h"
 
 // narysowanie napisu txt na powierzchni screen, zaczynaj�c od punktu (x, y)
 // charset to bitmapa 128x128 zawieraj�ca znaki
@@ -94,21 +73,6 @@ void DrawRectangle(SDL_Surface *screen, int x, int y, int l, int k,
         DrawLine(screen, x + 1, i, l - 2, 1, 0, fillColor);
 };
 
-#define MAX_SURFACES 30
-#define MAX_TEXTURES 5
-#define MAX_OBJECTS 500
-typedef struct {
-    SDL_Surface *sprite[9];
-} SPRITESHEET_T;
-typedef struct {
-    SDL_Surface *surfaces[MAX_SURFACES];
-    SDL_Texture *textures[MAX_TEXTURES];
-    SDL_Window *window;
-    SDL_Renderer *renderer;
-    int surface_index = 0;
-    int texture_index = 0;
-} SDL_OBJECTS_T;
-
 void free_sdl_resources(SDL_OBJECTS_T *sdl_objects) {
     for (int i = 0; i < sdl_objects->surface_index; i++) {
         SDL_FreeSurface(sdl_objects->surfaces[i]);
@@ -136,8 +100,6 @@ int load_image_into_surface(SDL_Surface **surface, const char *image_path,
 
     return 0;
 }
-enum Direction { RIGHT, LEFT, UP, DOWN };
-enum ObjectType { NOTHING, BORDER, LADDER, LADDER_TOP, PLATFORM, ENEMY };
 
 typedef struct {
     int left;
@@ -239,7 +201,7 @@ class Player {
 void Player::jump() {
     if (this->jump_state || this->ladder_state || this->dead_state) return;
     this->jump_state = 1;
-    this->gravity = -5;
+    this->gravity = this->max_gravity * -(JUMP_HEIGHT);
 }
 double Player::getBORDER(Direction side) {
     switch (side) {
@@ -657,9 +619,6 @@ extern "C"
             };
         };
         player.moving = 0;
-
-        printf("%d\n", player.ladder_possible);
-
         keystate = SDL_GetKeyboardState(NULL);
         if (keystate[SDL_SCANCODE_RIGHT] || keystate[SDL_SCANCODE_D]) {
             player.ladder_state = 0;
@@ -688,11 +647,12 @@ extern "C"
             player.jump();
         }
 
-        // objectList[0]->x += delta * 10;
-
         frames++;
         frameCounter += delta * 200;
         if (frameCounter > 1000) frameCounter = 0;
+
+        // // Sztuczne opóźnienie
+        // for (int i = 0; i < 1000; i++) printf("  \b\b");
 
         player.animate();
     };
