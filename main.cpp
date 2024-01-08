@@ -131,7 +131,7 @@ void OBJECT::place(int x, int y) {
     this->x = SCREEN_WIDTH / 2 + (x * TILE_SIZE);
     this->y = SCREEN_HEIGHT / 2 + (y * TILE_SIZE);
     if (type == LADDER_TOP)
-        this->y -= TILE_SIZE;
+        this->y -= TILE_SIZE / 2;
     else if (type == LADDER)
         this->y += (sheet->sprite[curent_sprite]->h - TILE_SIZE) / 2;
     start_values.x = this->x;
@@ -258,9 +258,10 @@ void Player::collision() {
         y -= gravity_delta;
         jump_state = 0;
         falling = 0;
-        dead_state = 1;
+        UNALIVE = 1;
     }
-
+    int zatrzymantko = 0;
+    ladder_top = 0;
     // check for collision with objects
     for (int i = 0; i < objectListSize; i++) {
         if (objectList[i] == NULL) continue;
@@ -272,10 +273,12 @@ void Player::collision() {
                 getBORDER(RIGHT) > objectList[i]->getBORDER(LEFT) &&
                 getBORDER(UP) < objectList[i]->getBORDER(DOWN)) {
                 y -= gravity_delta;
+                zatrzymantko = 1;
                 if (getBORDER(DOWN) < objectList[i]->getBORDER(UP)) {
                     jump_state = 0;
                     falling = 0;
                 }
+                if (ladder_state == 0) verticalSTOP = 1;
                 if (getBORDER(UP) > objectList[i]->getBORDER(UP)) {
                     jump_state = 1;
                     if (gravity < 0) gravity = 0;
@@ -303,6 +306,7 @@ void Player::collision() {
                 x > objectList[i]->getBORDER(LEFT) &&
                 getBORDER(UP) < objectList[i]->getBORDER(DOWN)) {
                 ladder_top = 1;
+                zatrzymantko = 0;
             }
         }
         if (objectList[i]->type == ENEMY) {
@@ -314,6 +318,8 @@ void Player::collision() {
             }
         }
     }
+
+    if (zatrzymantko && delta_y > 0) y -= delta_y;
 
     // EVENTS
     if (UNALIVE) dead_state = 1;
