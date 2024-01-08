@@ -33,4 +33,4 @@ typedef struct {
 enum Direction { RIGHT, LEFT, UP, DOWN };
 enum ObjectType { NOTHING, BORDER, LADDER, LADDER_TOP, PLATFORM, ENEMY };
 
-#define JUMP_HEIGHT 1.2
+#define JUMP_HEIGHT 1

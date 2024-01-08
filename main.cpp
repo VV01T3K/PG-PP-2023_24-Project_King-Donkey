@@ -152,7 +152,7 @@ class Player : public OBJECT {
     int objectListSize;
     Direction direction = RIGHT;
     double speed = 1.5;
-    double max_gravity = 4;
+    double max_gravity = 2;
     double gravity;
     double gravity_delta = 0;
     double delta_x = 0;
@@ -165,6 +165,7 @@ class Player : public OBJECT {
     int dead_state = 0;
     int jump_state = 0;
     int moving = 0;
+    int falling = 1;
     Player(double x, double y, double *delta, SPRITESHEET_T *sheet,
            OBJECT **objectList, int objectListSize)
         : OBJECT(0, x, y, delta, sheet),  // Call base class constructor here
@@ -180,34 +181,35 @@ class Player : public OBJECT {
     void jump();
 };
 void Player::jump() {
-    if (this->jump_state || this->ladder_state || this->dead_state) return;
-    this->jump_state = 1;
-    this->gravity = this->max_gravity * -(JUMP_HEIGHT);
+    if (jump_state || ladder_state || dead_state || falling) return;
+    jump_state = 1;
+    gravity = max_gravity * -(JUMP_HEIGHT)*speed;
 }
 void Player::nextFrame(SDL_Surface *screen) {
-    if (this->gravity < max_gravity || !this->jump_state)
-        this->gravity += *delta * max_gravity * 4;
+    if (gravity < max_gravity) gravity += *delta * max_gravity * 4;
+    if (gravity > max_gravity) gravity = max_gravity;
 
-    double gravity_distance = this->gravity * *delta * 100;
+    double gravity_distance = gravity * *delta * 100 * speed;
 
-    this->gravity_delta = 0;
-    if (this->ladder_state == 0) {
-        this->gravity_delta = gravity_distance;
-        this->y += gravity_distance;
+    gravity_delta = 0;
+    if (ladder_state == 0) {
+        gravity_delta = gravity_distance;
+        y += gravity_distance;
     }
-    this->ladder_possible = 0;
-    this->ladder_top = 0;
+    ladder_possible = 0;
+    ladder_top = 0;
 
-    this->collision();
+    collision();
 
-    this->draw(screen);
-    this->delta_x = 0;
-    this->delta_y = 0;
+    draw(screen);
+    delta_x = 0;
+    delta_y = 0;
 }
 
 void Player::collision() {
     int horizontalSTOP = 0, verticalSTOP = 0;
     int UNALIVE = 0;
+    falling = 1;
     // check for collision with screen borders
     if (this->getBORDER(LEFT) < start_x) horizontalSTOP = 1;
     if (this->getBORDER(RIGHT) > end_x + start_x) horizontalSTOP = 1;
@@ -216,6 +218,7 @@ void Player::collision() {
         verticalSTOP = 1;
         this->y -= this->gravity_delta;
         this->jump_state = 0;
+        falling = 0;
     }
 
     // check for collision with objects
@@ -228,7 +231,14 @@ void Player::collision() {
                 this->getBORDER(RIGHT) > this->objectList[i]->getBORDER(LEFT) &&
                 this->getBORDER(UP) < this->objectList[i]->getBORDER(DOWN)) {
                 this->y -= this->gravity_delta;
-                this->jump_state = 0;
+                if (getBORDER(DOWN) < this->objectList[i]->getBORDER(UP)) {
+                    this->jump_state = 0;
+                    this->falling = 0;
+                }
+                if (getBORDER(UP) > this->objectList[i]->getBORDER(UP)) {
+                    this->jump_state = 1;
+                    if (this->gravity < 0) this->gravity = 0;
+                }
             }
             if (this->getBORDER(DOWN) > this->objectList[i]->getBORDER(UP) &&
                 this->getBORDER(LEFT) < this->objectList[i]->getBORDER(RIGHT) &&
@@ -265,7 +275,6 @@ void Player::collision() {
     }
 
     // EVENTS
-    if (!this->jump_state) this->gravity = this->max_gravity / 2;
     if (UNALIVE) this->dead_state = 1;
     if (horizontalSTOP) this->x -= this->delta_x;
     if (verticalSTOP) this->y -= this->delta_y;
@@ -478,7 +487,7 @@ extern "C"
     }
 
     objectList[objectListMaxIndex++] =
-        new OBJECT(PLATFORM, SCREEN_WIDTH / 2, SCREEN_HEIGHT / 1.25, &delta,
+        new OBJECT(PLATFORM, SCREEN_WIDTH / 2, SCREEN_HEIGHT / 1.4, &delta,
                    &platformSheet);
 
     objectList[objectListMaxIndex++] = new OBJECT(
