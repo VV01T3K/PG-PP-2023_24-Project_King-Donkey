@@ -4,6 +4,11 @@ _Pragma("once")
 #define SCREEN_WIDTH 640
 #define SCREEN_HEIGHT 480
 
+#define SCREEN_MIDDLE_X (SCREEN_WIDTH / 2)
+#define SCREEN_MIDDLE_Y (SCREEN_HEIGHT / 2)
+
+#define TILE_SIZE 24
+
 #define padding_top 24
 #define padding_bottom 16
 #define padding_left 16
@@ -31,7 +36,9 @@ typedef struct {
 } SDL_OBJECTS_T;
 
 enum Direction { RIGHT, LEFT, UP, DOWN };
-enum ObjectType { NOTHING, BORDER, LADDER, LADDER_TOP, PLATFORM, ENEMY };
+enum ObjectType { BORDER, LADDER, LADDER_TOP, PLATFORM, ENEMY, NOTHING };
+enum PLATFORM_TYPE { PLATFORM_MEDIUM, PLATFORM_SHORT, PLATFORM_LONG };
+enum LADDER_TYPE { LADDER_SHORT, LADDER_MEDIUM, LADDER_LONG };
 
 #define JUMP_HEIGHT 1
 typedef struct {

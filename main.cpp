@@ -100,6 +100,7 @@ int load_image_into_surface(SDL_Surface **surface, const char *image_path,
 
     return 0;
 }
+
 class OBJECT {
    public:
     SPRITESHEET_T *sheet;
@@ -112,12 +113,22 @@ class OBJECT {
     double y = 0;
     START_VALUES_OBJECT_T start_values;
 
-    OBJECT(int type, double x, double y, double *delta, SPRITESHEET_T *sheet)
-        : type(type), x(x), y(y), sheet(sheet), delta(delta) {
-        if (type == LADDER_TOP) this->curent_sprite = 1;
+    OBJECT(int type, int sprite_type, double x, double y, double *delta,
+           SPRITESHEET_T *sheet)
+        : type(type),
+          x(x),
+          y(y),
+          sheet(sheet),
+          delta(delta),
+          curent_sprite(sprite_type) {
+        if (type == LADDER_TOP) {
+            curent_sprite = 3;
+            this->y -= TILE_SIZE;
+        } else if (type == LADDER)
+            this->y += (sheet->sprite[curent_sprite]->h - TILE_SIZE) / 2;
 
-        start_values.x = x;
-        start_values.y = y;
+        start_values.x = this->x;
+        start_values.y = this->y;
         start_values.curent_sprite = curent_sprite;
         start_values.anim_cycle = anim_cycle;
     }
@@ -135,18 +146,19 @@ void OBJECT::reset() {
 double OBJECT::getBORDER(Direction side) {
     switch (side) {
         case RIGHT:
-            return x + sheet->sprite[0]->w / 2;
+            return x + sheet->sprite[curent_sprite]->w / 2;
         case LEFT:
-            return x - sheet->sprite[0]->w / 2;
+            return x - sheet->sprite[curent_sprite]->w / 2;
         case UP:
-            return y - sheet->sprite[0]->h / 2;
+            return y - sheet->sprite[curent_sprite]->h / 2;
         case DOWN:
-            return y + sheet->sprite[0]->h / 2;
+            return y + sheet->sprite[curent_sprite]->h / 2;
         default:
             return 0;
     }
 }
 void OBJECT::draw(SDL_Surface *screen) {
+    if (x == 0 && y == 0) return;
     DrawSurface(screen, sheet->sprite[curent_sprite], x, y);
     frameCounter += *delta * 200;
     if (frameCounter > 1000) frameCounter = 0;
@@ -174,7 +186,7 @@ class Player : public OBJECT {
     int falling = 1;
     Player(double x, double y, double *delta, SPRITESHEET_T *sheet,
            OBJECT **objectList, int objectListSize)
-        : OBJECT(0, x, y, delta, sheet),  // Call base class constructor here
+        : OBJECT(0, 0, x, y, delta, sheet),
           objectList(objectList),
           objectListSize(objectListSize) {
         this->gravity = this->max_gravity;
@@ -309,19 +321,18 @@ void Player::animate() {
         curent_sprite = 8;
         return;
     }
-    if (jump_state) {
-        curent_sprite = 1;
-        if (direction == RIGHT) curent_sprite = 4;
-
-        return;
-    }
-
     if (ladder_state) {
         if (curent_sprite != 6 && curent_sprite != 7) curent_sprite = 6;
         if (frameCounter >= 60 && moving) {
             frameCounter = 0;
             curent_sprite = curent_sprite == 7 ? 6 : 7;
         }
+
+        return;
+    }
+    if (jump_state) {
+        curent_sprite = 1;
+        if (direction == RIGHT) curent_sprite = 4;
 
         return;
     }
@@ -480,7 +491,7 @@ extern "C"
         }
     }
     SPRITESHEET_T ladderSheet;
-    for (int i = 0; i < 3; i++) {
+    for (int i = 0; i < 4; i++) {
         sprintf(text, "Ladder/%d", i);
         if (load_image_into_surface(&(ladderSheet.sprite[i]), text, &sdl_obj) !=
             0) {
@@ -505,21 +516,20 @@ extern "C"
     }
 
     objectList[objectListMaxIndex++] =
-        new OBJECT(PLATFORM, SCREEN_WIDTH / 2, SCREEN_HEIGHT / 1.4, &delta,
-                   &platformSheet);
+        new OBJECT(PLATFORM, PLATFORM_LONG, SCREEN_WIDTH / 2,
+                   SCREEN_HEIGHT / 1.4, &delta, &platformSheet);
 
-    objectList[objectListMaxIndex++] = new OBJECT(
-        LADDER, SCREEN_WIDTH / 2, SCREEN_HEIGHT / 1.2, &delta, &ladderSheet);
-    objectList[objectListMaxIndex++] = new OBJECT(
-        LADDER, SCREEN_WIDTH / 2, SCREEN_HEIGHT / 1.15, &delta, &ladderSheet);
-    objectList[objectListMaxIndex++] = new OBJECT(
-        LADDER, SCREEN_WIDTH / 2, SCREEN_HEIGHT / 1.25, &delta, &ladderSheet);
     objectList[objectListMaxIndex++] =
-        new OBJECT(LADDER_TOP, SCREEN_WIDTH / 2, SCREEN_HEIGHT / 1.30, &delta,
+        new OBJECT(LADDER, 0, SCREEN_WIDTH / 2.2, SCREEN_HEIGHT / 1.4, &delta,
                    &ladderSheet);
-
+    objectList[objectListMaxIndex++] =
+        new OBJECT(LADDER, 1, SCREEN_WIDTH / 2.4, SCREEN_HEIGHT / 1.4, &delta,
+                   &ladderSheet);
     objectList[objectListMaxIndex++] = new OBJECT(
-        ENEMY, SCREEN_WIDTH / 3, SCREEN_HEIGHT / 1.1, &delta, &barrelSheet);
+        LADDER, 2, SCREEN_WIDTH / 2, SCREEN_HEIGHT / 1.4, &delta, &ladderSheet);
+    objectList[objectListMaxIndex++] =
+        new OBJECT(LADDER_TOP, 0, SCREEN_WIDTH / 2, SCREEN_HEIGHT / 1.4, &delta,
+                   &ladderSheet);
 
     Player player(SCREEN_WIDTH / 2, SCREEN_HEIGHT / 3, &delta, &palyerSheet,
                   objectList, objectListMaxIndex);
