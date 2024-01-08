@@ -398,27 +398,29 @@ void Player::move(Direction direction) {
         animate();
     }
 }
-
 void createLevel_1(OBJECT **objectList, int max, Player &player) {
     // reset
     player.reset();
     for (int i = 0; i < max; i++) {
         objectList[i]->destroy();
     }
+    __BUILDLEVEL_PREPARE__
 
-    // max index 70
-    objectList[0]->place(6, 1);
-    objectList[30]->place(7, 1);
-    objectList[60]->place(7, 1);
-    objectList[1]->place(-6, 3);
+    // MAX 10 objects of the same type
+    objectList[NEXT(PLATFORM_MEDIUM)]->place(6, 1);
+    objectList[NEXT(LADDER_MEDIUM)]->place(7, 1);
+    objectList[NEXT(LADDER_TOP)]->place(7, 1);
+    objectList[NEXT(PLATFORM_MEDIUM)]->place(-6, 3);
 
-    objectList[22]->place(0, 6);
-    objectList[23]->place(0, -3);
-    objectList[51]->place(0, -3);
-    objectList[62]->place(0, -3);
+    objectList[NEXT(PLATFORM_LONG)]->place(0, 6);
+    objectList[NEXT(PLATFORM_LONG)]->place(0, -3);
+    objectList[NEXT(LADDER_MEDIUM)]->place(0, -3);
+    objectList[NEXT(LADDER_TOP)]->place(0, -3);
 
-    objectList[41]->place(3, -3);
-    objectList[63]->place(3, -3);
+    objectList[NEXT(LADDER_SHORT)]->place(3, -3);
+    objectList[NEXT(LADDER_TOP)]->place(3, -3);
+
+    objectList[WIN_]->place(5, 5);
 }
 
 // main
@@ -544,6 +546,14 @@ extern "C"
             return 1;
         }
     }
+    SPRITESHEET_T winSheet;
+    for (int i = 0; i < 1; i++) {
+        sprintf(text, "Win/%d", i);
+        if (load_image_into_surface(&(winSheet.sprite[i]), text, &sdl_obj) !=
+            0) {
+            return 1;
+        }
+    }
 
     OBJECT *objectList[MAX_OBJECTS];
     int objectListMaxIndex = 0;
@@ -562,7 +572,17 @@ extern "C"
     }
     for (int i = 0; i < 10; i++) {
         objectList[objectListMaxIndex++] =
-            new OBJECT(LADDER_TOP, -1, &delta, &ladderSheet);
+            new OBJECT(LADDER_TOP, 0, &delta, &ladderSheet);
+    }
+
+    // for (int i = 0; i < 10; i++) {
+    //     objectList[objectListMaxIndex++] =
+    //         new OBJECT(ENEMY, 0, &delta, &barrelSheet);
+    // }
+
+    for (int i = 0; i < 1; i++) {
+        objectList[objectListMaxIndex++] =
+            new OBJECT(WIN, 0, &delta, &winSheet);
     }
 
     GAME_T GAME;

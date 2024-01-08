@@ -21,7 +21,7 @@ _Pragma("once")
 
 #define MAX_SURFACES 30
 #define MAX_TEXTURES 5
-#define MAX_OBJECTS 100
+#define MAX_OBJECTS 200
 
     typedef struct {
     SDL_Surface *sprite[9];
@@ -36,7 +36,7 @@ typedef struct {
 } SDL_OBJECTS_T;
 
 enum Direction { RIGHT, LEFT, UP, DOWN };
-enum ObjectType { BORDER, LADDER, LADDER_TOP, PLATFORM, ENEMY, NOTHING };
+enum ObjectType { BORDER, LADDER, LADDER_TOP, PLATFORM, ENEMY, WIN, NOTHING };
 enum PLATFORM_TYPE { PLATFORM_SHORT, PLATFORM_MEDIUM, PLATFORM_LONG };
 enum LADDER_TYPE { LADDER_SHORT, LADDER_MEDIUM, LADDER_LONG };
 
@@ -65,3 +65,29 @@ typedef struct {
     int level = 1;
     int level_max = 3;
 } GAME_T;
+
+// BUILD_LEVEL
+
+#define __BUILDLEVEL_PREPARE__    \
+    struct {                      \
+        int PLATFORM_SHORT_ = 0;  \
+        int PLATFORM_MEDIUM_ = 0; \
+        int PLATFORM_LONG_ = 0;   \
+        int LADDER_SHORT_ = 0;    \
+        int LADDER_MEDIUM_ = 0;   \
+        int LADDER_LONG_ = 0;     \
+        int LADDER_TOP_ = 0;      \
+    } index;
+
+enum BUILDLEVEL {
+    PLATFORM_SHORT__ = 10,
+    PLATFORM_MEDIUM__ = 0,
+    PLATFORM_LONG__ = 20,
+    LADDER_SHORT__ = 40,
+    LADDER_MEDIUM__ = 30,
+    LADDER_LONG__ = 50,
+    LADDER_TOP__ = 60,
+    WIN_ = 70
+};
+
+#define NEXT(obj) obj##__ + index.obj##_++
