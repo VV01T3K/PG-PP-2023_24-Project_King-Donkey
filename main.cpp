@@ -211,122 +211,122 @@ void Player::collision() {
     int UNALIVE = 0;
     falling = 1;
     // check for collision with screen borders
-    if (this->getBORDER(LEFT) < start_x) horizontalSTOP = 1;
-    if (this->getBORDER(RIGHT) > end_x + start_x) horizontalSTOP = 1;
-    if (this->getBORDER(UP) < start_y) verticalSTOP = 1;
-    if (this->getBORDER(DOWN) > end_y + start_y) {
+    if (getBORDER(LEFT) < start_x) horizontalSTOP = 1;
+    if (getBORDER(RIGHT) > end_x + start_x) horizontalSTOP = 1;
+    if (getBORDER(UP) < start_y) verticalSTOP = 1;
+    if (getBORDER(DOWN) > end_y + start_y) {
         verticalSTOP = 1;
-        this->y -= this->gravity_delta;
-        this->jump_state = 0;
+        y -= gravity_delta;
+        jump_state = 0;
         falling = 0;
     }
 
     // check for collision with objects
-    for (int i = 0; i < this->objectListSize; i++) {
-        if (this->objectList[i] == NULL) continue;
-        if (this->objectList[i]->type == NOTHING) continue;
-        if (this->objectList[i]->type == PLATFORM) {
-            if (this->getBORDER(DOWN) > this->objectList[i]->getBORDER(UP) &&
-                this->getBORDER(LEFT) < this->objectList[i]->getBORDER(RIGHT) &&
-                this->getBORDER(RIGHT) > this->objectList[i]->getBORDER(LEFT) &&
-                this->getBORDER(UP) < this->objectList[i]->getBORDER(DOWN)) {
-                this->y -= this->gravity_delta;
-                if (getBORDER(DOWN) < this->objectList[i]->getBORDER(UP)) {
-                    this->jump_state = 0;
-                    this->falling = 0;
+    for (int i = 0; i < objectListSize; i++) {
+        if (objectList[i] == NULL) continue;
+        if (objectList[i]->type == NOTHING) continue;
+        if (objectList[i]->type == PLATFORM) {
+            if (getBORDER(DOWN) > objectList[i]->getBORDER(UP) &&
+                getBORDER(LEFT) < objectList[i]->getBORDER(RIGHT) &&
+                getBORDER(RIGHT) > objectList[i]->getBORDER(LEFT) &&
+                getBORDER(UP) < objectList[i]->getBORDER(DOWN)) {
+                y -= gravity_delta;
+                if (getBORDER(DOWN) < objectList[i]->getBORDER(UP)) {
+                    jump_state = 0;
+                    falling = 0;
                 }
-                if (getBORDER(UP) > this->objectList[i]->getBORDER(UP)) {
-                    this->jump_state = 1;
-                    if (this->gravity < 0) this->gravity = 0;
+                if (getBORDER(UP) > objectList[i]->getBORDER(UP)) {
+                    jump_state = 1;
+                    if (gravity < 0) gravity = 0;
                 }
             }
-            if (this->getBORDER(DOWN) > this->objectList[i]->getBORDER(UP) &&
-                this->getBORDER(LEFT) < this->objectList[i]->getBORDER(RIGHT) &&
-                this->getBORDER(RIGHT) > this->objectList[i]->getBORDER(LEFT) &&
-                this->getBORDER(UP) < this->objectList[i]->getBORDER(DOWN)) {
+            if (getBORDER(DOWN) > objectList[i]->getBORDER(UP) &&
+                getBORDER(LEFT) < objectList[i]->getBORDER(RIGHT) &&
+                getBORDER(RIGHT) > objectList[i]->getBORDER(LEFT) &&
+                getBORDER(UP) < objectList[i]->getBORDER(DOWN)) {
                 horizontalSTOP = 1;
-                this->y += this->gravity_delta;
+                y += gravity_delta;
             }
         }
-        if (this->objectList[i]->type == LADDER) {
-            if (this->getBORDER(DOWN) > this->objectList[i]->getBORDER(UP) &&
-                this->x < this->objectList[i]->getBORDER(RIGHT) &&
-                this->x > this->objectList[i]->getBORDER(LEFT) &&
-                this->getBORDER(UP) < this->objectList[i]->getBORDER(DOWN)) {
-                this->ladder_possible = 1;
+        if (objectList[i]->type == LADDER) {
+            if (getBORDER(DOWN) > objectList[i]->getBORDER(UP) &&
+                x < objectList[i]->getBORDER(RIGHT) &&
+                x > objectList[i]->getBORDER(LEFT) &&
+                getBORDER(UP) < objectList[i]->getBORDER(DOWN)) {
+                ladder_possible = 1;
             }
         }
-        if (this->objectList[i]->type == LADDER_TOP) {
-            if (this->getBORDER(DOWN) > this->objectList[i]->getBORDER(UP) &&
-                this->x < this->objectList[i]->getBORDER(RIGHT) &&
-                this->x > this->objectList[i]->getBORDER(LEFT) &&
-                this->getBORDER(UP) < this->objectList[i]->getBORDER(DOWN)) {
-                this->ladder_top = 1;
+        if (objectList[i]->type == LADDER_TOP) {
+            if (getBORDER(DOWN) > objectList[i]->getBORDER(UP) &&
+                x < objectList[i]->getBORDER(RIGHT) &&
+                x > objectList[i]->getBORDER(LEFT) &&
+                getBORDER(UP) < objectList[i]->getBORDER(DOWN)) {
+                ladder_top = 1;
             }
         }
-        if (this->objectList[i]->type == ENEMY) {
-            if (this->getBORDER(DOWN) > this->objectList[i]->getBORDER(UP) &&
-                this->getBORDER(LEFT) < this->objectList[i]->getBORDER(RIGHT) &&
-                this->getBORDER(RIGHT) > this->objectList[i]->getBORDER(LEFT) &&
-                this->getBORDER(UP) < this->objectList[i]->getBORDER(DOWN)) {
+        if (objectList[i]->type == ENEMY) {
+            if (getBORDER(DOWN) > objectList[i]->getBORDER(UP) &&
+                getBORDER(LEFT) < objectList[i]->getBORDER(RIGHT) &&
+                getBORDER(RIGHT) > objectList[i]->getBORDER(LEFT) &&
+                getBORDER(UP) < objectList[i]->getBORDER(DOWN)) {
                 UNALIVE = 1;
             }
         }
     }
 
     // EVENTS
-    if (UNALIVE) this->dead_state = 1;
-    if (horizontalSTOP) this->x -= this->delta_x;
-    if (verticalSTOP) this->y -= this->delta_y;
+    if (UNALIVE) dead_state = 1;
+    if (horizontalSTOP) x -= delta_x;
+    if (verticalSTOP) y -= delta_y;
 }
 void Player::animate() {
-    if (this->dead_state) {
-        this->curent_sprite = 8;
+    if (dead_state) {
+        curent_sprite = 8;
         return;
     }
-    if (this->jump_state) {
-        this->curent_sprite = 1;
-        if (this->direction == RIGHT) this->curent_sprite = 4;
+    if (jump_state) {
+        curent_sprite = 1;
+        if (direction == RIGHT) curent_sprite = 4;
 
         return;
     }
 
-    if (this->ladder_state) {
+    if (ladder_state) {
         if (curent_sprite != 6 && curent_sprite != 7) curent_sprite = 6;
-        if (frameCounter >= 60 && this->moving) {
+        if (frameCounter >= 60 && moving) {
             frameCounter = 0;
-            this->curent_sprite = this->curent_sprite == 7 ? 6 : 7;
+            curent_sprite = curent_sprite == 7 ? 6 : 7;
         }
 
         return;
     }
 
-    if (this->moving == 0) {
-        this->curent_sprite = 0;
-        if (this->direction == RIGHT) this->curent_sprite = 3;
+    if (moving == 0) {
+        curent_sprite = 0;
+        if (direction == RIGHT) curent_sprite = 3;
 
         return;
     }
     if (frameCounter >= 30) {
         frameCounter = 0;
-        if (this->direction == LEFT)
-            this->curent_sprite = this->curent_sprite == 2 ? 0 : 2;
+        if (direction == LEFT)
+            curent_sprite = curent_sprite == 2 ? 0 : 2;
         else
-            this->curent_sprite = this->curent_sprite == 5 ? 3 : 5;
+            curent_sprite = curent_sprite == 5 ? 3 : 5;
     }
 }
 void Player::move(Direction direction) {
-    if (this->dead_state) return;
+    if (dead_state) return;
     double distance = 0;
-    if (this->ladder_state) {
+    if (ladder_state) {
         switch (direction) {
             case UP:
-                this->y -= distance = this->speed * *delta * 80;
-                this->delta_y -= distance;
+                y -= distance = speed * *delta * 80;
+                delta_y -= distance;
                 break;
             case DOWN:
-                this->y += distance = this->speed * *delta * 80;
-                this->delta_y += distance;
+                y += distance = speed * *delta * 80;
+                delta_y += distance;
                 break;
             default:
                 break;
@@ -334,12 +334,12 @@ void Player::move(Direction direction) {
     } else {
         switch (direction) {
             case RIGHT:
-                this->x += distance = this->speed * *delta * 100;
-                this->delta_x += distance;
+                x += distance = speed * *delta * 100;
+                delta_x += distance;
                 break;
             case LEFT:
-                this->x -= distance = this->speed * *delta * 100;
-                this->delta_x -= distance;
+                x -= distance = speed * *delta * 100;
+                delta_x -= distance;
                 break;
             default:
                 break;
@@ -348,8 +348,8 @@ void Player::move(Direction direction) {
 
     this->direction = direction;
     if (distance) {
-        this->moving = 1;
-        this->animate();
+        moving = 1;
+        animate();
     }
 }
 
