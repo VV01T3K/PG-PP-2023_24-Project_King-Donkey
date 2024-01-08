@@ -471,11 +471,6 @@ extern "C"
     OBJECT *objectList[MAX_OBJECTS];
     int objectListMaxIndex = 0;
 
-    SPRITESHEET_T etiSheet;
-    if (load_image_into_surface(&(etiSheet.sprite[0]), "eti", &sdl_obj) != 0) {
-        return 1;
-    }
-
     SPRITESHEET_T palyerSheet;
     for (int i = 0; i < 9; i++) {
         sprintf(text, "Player/%d", i);
