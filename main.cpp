@@ -124,12 +124,12 @@ class OBJECT {
     void draw(SDL_Surface *screen);
     double getBORDER(Direction side);
     void reset();
-    void place(int x, int y);
+    void place(float x, float y);
     void destroy() { x = y = 0; };
 };
-void OBJECT::place(int x, int y) {
+void OBJECT::place(float x, float y) {
     this->x = SCREEN_WIDTH / 2 + (x * TILE_SIZE);
-    this->y = SCREEN_HEIGHT / 2 + (y * TILE_SIZE);
+    this->y = SCREEN_HEIGHT / 2 - (y * TILE_SIZE);
     if (type == LADDER_TOP)
         this->y -= TILE_SIZE / 2;
     else if (type == LADDER)
@@ -317,6 +317,14 @@ void Player::collision() {
                 UNALIVE = 1;
             }
         }
+        if (objectList[i]->type == WIN) {
+            if (getBORDER(DOWN) > objectList[i]->getBORDER(UP) &&
+                getBORDER(LEFT) < objectList[i]->getBORDER(RIGHT) &&
+                getBORDER(RIGHT) > objectList[i]->getBORDER(LEFT) &&
+                getBORDER(UP) < objectList[i]->getBORDER(DOWN)) {
+                GAME->win += 1;
+            }
+        }
     }
 
     if (zatrzymantko && delta_y > 0) y -= delta_y;
@@ -399,28 +407,24 @@ void Player::move(Direction direction) {
     }
 }
 void createLevel_1(OBJECT **objectList, int max, Player &player) {
-    // reset
-    player.reset();
-    for (int i = 0; i < max; i++) {
-        objectList[i]->destroy();
-    }
     __BUILDLEVEL_PREPARE__
 
     // MAX 10 objects of the same type
-    objectList[NEXT(PLATFORM_MEDIUM)]->place(6, 1);
-    objectList[NEXT(LADDER_MEDIUM)]->place(7, 1);
-    objectList[NEXT(LADDER_TOP)]->place(7, 1);
-    objectList[NEXT(PLATFORM_MEDIUM)]->place(-6, 3);
+    // NEXT(OBJECT_TYPE) | place(x, y) each TILE_SIZE
+    objectList[NEXT(PLATFORM_MEDIUM)]->place(6, -1);
+    objectList[NEXT(LADDER_MEDIUM)]->place(7, -1);
+    objectList[NEXT(LADDER_TOP)]->place(7, -1);
+    objectList[NEXT(PLATFORM_MEDIUM)]->place(-6, -3);
 
-    objectList[NEXT(PLATFORM_LONG)]->place(0, 6);
-    objectList[NEXT(PLATFORM_LONG)]->place(0, -3);
-    objectList[NEXT(LADDER_MEDIUM)]->place(0, -3);
-    objectList[NEXT(LADDER_TOP)]->place(0, -3);
+    objectList[NEXT(PLATFORM_LONG)]->place(0, -6);
+    objectList[NEXT(PLATFORM_LONG)]->place(0, 3);
+    objectList[NEXT(LADDER_MEDIUM)]->place(0, 3);
+    objectList[NEXT(LADDER_TOP)]->place(0, 3);
 
-    objectList[NEXT(LADDER_SHORT)]->place(3, -3);
-    objectList[NEXT(LADDER_TOP)]->place(3, -3);
+    objectList[NEXT(LADDER_SHORT)]->place(3, 3);
+    objectList[NEXT(LADDER_TOP)]->place(3, 3);
 
-    objectList[WIN_]->place(5, 5);
+    objectList[WIN_]->place(-8, 5.5);
 }
 
 // main

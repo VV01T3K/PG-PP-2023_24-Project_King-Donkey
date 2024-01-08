@@ -68,15 +68,19 @@ typedef struct {
 
 // BUILD_LEVEL
 
-#define __BUILDLEVEL_PREPARE__    \
-    struct {                      \
-        int PLATFORM_SHORT_ = 0;  \
-        int PLATFORM_MEDIUM_ = 0; \
-        int PLATFORM_LONG_ = 0;   \
-        int LADDER_SHORT_ = 0;    \
-        int LADDER_MEDIUM_ = 0;   \
-        int LADDER_LONG_ = 0;     \
-        int LADDER_TOP_ = 0;      \
+#define __BUILDLEVEL_PREPARE__      \
+    player.reset();                 \
+    for (int i = 0; i < max; i++) { \
+        objectList[i]->destroy();   \
+    }                               \
+    struct {                        \
+        int PLATFORM_SHORT_ = 0;    \
+        int PLATFORM_MEDIUM_ = 0;   \
+        int PLATFORM_LONG_ = 0;     \
+        int LADDER_SHORT_ = 0;      \
+        int LADDER_MEDIUM_ = 0;     \
+        int LADDER_LONG_ = 0;       \
+        int LADDER_TOP_ = 0;        \
     } index;
 
 enum BUILDLEVEL {
