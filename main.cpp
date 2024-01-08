@@ -124,9 +124,9 @@ class OBJECT {
     void draw(SDL_Surface *screen);
     double getBORDER(Direction side);
     void reset();
-    void place(double x, double y);
+    void place(int x, int y);
 };
-void OBJECT::place(double x, double y) {
+void OBJECT::place(int x, int y) {
     if (type == LADDER_TOP)
         this->y -= TILE_SIZE;
     else if (type == LADDER)
@@ -389,7 +389,10 @@ void Player::move(Direction direction) {
     }
 }
 
-void createLevel_0(OBJECT **objectList) { objectList[29]->place(0, 0); }
+void createLevel_0(OBJECT **objectList) {
+    //
+    objectList[21]->place(0, 0);
+}
 
 // main
 #ifdef __cplusplus
