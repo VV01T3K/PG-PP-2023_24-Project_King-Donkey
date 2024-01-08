@@ -109,23 +109,18 @@ typedef struct {
 } BORDERS_T;
 
 class OBJECT {
-   private:
+   public:
     SPRITESHEET_T *sheet;
-    double *frameCounter;
+    double frameCounter = 0;
     int curent_sprite = 0;
     int anim_cycle = 0;
-
-   public:
+    int type;
+    double *delta;
     double x = 0;
     double y = 0;
-    int type;
 
-    // Default constructor
-    OBJECT() {}
-    // Overloaded constructor
-    OBJECT(int type, double x, double y, SPRITESHEET_T *sheet,
-           double *frameCounter)
-        : type(type), x(x), y(y), sheet(sheet), frameCounter(frameCounter) {
+    OBJECT(int type, double x, double y, double *delta, SPRITESHEET_T *sheet)
+        : type(type), x(x), y(y), sheet(sheet), delta(delta) {
         if (type == LADDER_TOP) this->curent_sprite = 1;
     }
 
@@ -135,32 +130,28 @@ class OBJECT {
 double OBJECT::getBORDER(Direction side) {
     switch (side) {
         case RIGHT:
-            return this->x + this->sheet->sprite[0]->w / 2;
+            return x + sheet->sprite[0]->w / 2;
         case LEFT:
-            return this->x - this->sheet->sprite[0]->w / 2;
+            return x - sheet->sprite[0]->w / 2;
         case UP:
-            return this->y - this->sheet->sprite[0]->h / 2;
+            return y - sheet->sprite[0]->h / 2;
         case DOWN:
-            return this->y + this->sheet->sprite[0]->h / 2;
+            return y + sheet->sprite[0]->h / 2;
         default:
             return 0;
     }
 }
 void OBJECT::draw(SDL_Surface *screen) {
-    DrawSurface(screen, this->sheet->sprite[this->curent_sprite], this->x,
-                this->y);
+    DrawSurface(screen, sheet->sprite[curent_sprite], x, y);
+    frameCounter += *delta * 200;
+    if (frameCounter > 1000) frameCounter = 0;
 }
-class Player {
+class Player : public OBJECT {
    private:
-    SPRITESHEET_T *sheet;
     OBJECT **objectList;
     int objectListSize;
-    double *delta;
-    double *frameCounter;
     Direction direction = RIGHT;
     double speed = 1.5;
-    int curent_sprite = 0;
-    int anim_cycle = 0;
     double max_gravity = 4;
     double gravity;
     double gravity_delta = 0;
@@ -174,48 +165,24 @@ class Player {
     int dead_state = 0;
     int jump_state = 0;
     int moving = 0;
-    double x = 0;
-    double y = 0;
-    // void jump();
-    // void gravity();
     Player(double x, double y, double *delta, SPRITESHEET_T *sheet,
-           double *frameCounter, OBJECT **objectList, int objectListSize)
-        : objectList(objectList),
-          objectListSize(objectListSize),
-          delta(delta),
-          sheet(sheet),
-          frameCounter(frameCounter),
-          x(x),
-          y(y) {
+           OBJECT **objectList, int objectListSize)
+        : OBJECT(0, x, y, delta, sheet),  // Call base class constructor here
+          objectList(objectList),
+          objectListSize(objectListSize) {
         this->gravity = this->max_gravity;
     }
 
-    void draw(SDL_Surface *screen);
     void move(Direction direction);
     void animate();
     void collision();
     void nextFrame(SDL_Surface *screen);
-    double getBORDER(Direction side);
     void jump();
 };
 void Player::jump() {
     if (this->jump_state || this->ladder_state || this->dead_state) return;
     this->jump_state = 1;
     this->gravity = this->max_gravity * -(JUMP_HEIGHT);
-}
-double Player::getBORDER(Direction side) {
-    switch (side) {
-        case RIGHT:
-            return this->x + this->sheet->sprite[0]->w / 2;
-        case LEFT:
-            return this->x - this->sheet->sprite[0]->w / 2;
-        case UP:
-            return this->y - this->sheet->sprite[0]->h / 2;
-        case DOWN:
-            return this->y + this->sheet->sprite[0]->h / 2;
-        default:
-            return 0;
-    }
 }
 void Player::nextFrame(SDL_Surface *screen) {
     if (this->gravity < max_gravity || !this->jump_state)
@@ -303,10 +270,6 @@ void Player::collision() {
     if (horizontalSTOP) this->x -= this->delta_x;
     if (verticalSTOP) this->y -= this->delta_y;
 }
-void Player::draw(SDL_Surface *screen) {
-    DrawSurface(screen, this->sheet->sprite[this->curent_sprite], this->x,
-                this->y);
-}
 void Player::animate() {
     if (this->dead_state) {
         this->curent_sprite = 8;
@@ -320,11 +283,10 @@ void Player::animate() {
     }
 
     if (this->ladder_state) {
-        if (*frameCounter >= 80 && this->moving) {
-            *frameCounter = 0;
+        if (curent_sprite != 6 && curent_sprite != 7) curent_sprite = 6;
+        if (frameCounter >= 60 && this->moving) {
+            frameCounter = 0;
             this->curent_sprite = this->curent_sprite == 7 ? 6 : 7;
-        } else if (!this->moving) {
-            this->curent_sprite = 6;
         }
 
         return;
@@ -336,8 +298,8 @@ void Player::animate() {
 
         return;
     }
-    if (*frameCounter >= 30) {
-        *frameCounter = 0;
+    if (frameCounter >= 30) {
+        frameCounter = 0;
         if (this->direction == LEFT)
             this->curent_sprite = this->curent_sprite == 2 ? 0 : 2;
         else
@@ -516,28 +478,24 @@ extern "C"
     }
 
     objectList[objectListMaxIndex++] =
-        new OBJECT(PLATFORM, SCREEN_WIDTH / 2, SCREEN_HEIGHT / 1.25,
-                   &platformSheet, &frameCounter);
+        new OBJECT(PLATFORM, SCREEN_WIDTH / 2, SCREEN_HEIGHT / 1.25, &delta,
+                   &platformSheet);
 
+    objectList[objectListMaxIndex++] = new OBJECT(
+        LADDER, SCREEN_WIDTH / 2, SCREEN_HEIGHT / 1.2, &delta, &ladderSheet);
+    objectList[objectListMaxIndex++] = new OBJECT(
+        LADDER, SCREEN_WIDTH / 2, SCREEN_HEIGHT / 1.15, &delta, &ladderSheet);
+    objectList[objectListMaxIndex++] = new OBJECT(
+        LADDER, SCREEN_WIDTH / 2, SCREEN_HEIGHT / 1.25, &delta, &ladderSheet);
     objectList[objectListMaxIndex++] =
-        new OBJECT(LADDER, SCREEN_WIDTH / 2, SCREEN_HEIGHT / 1.2, &ladderSheet,
-                   &frameCounter);
-    objectList[objectListMaxIndex++] =
-        new OBJECT(LADDER, SCREEN_WIDTH / 2, SCREEN_HEIGHT / 1.15, &ladderSheet,
-                   &frameCounter);
-    objectList[objectListMaxIndex++] =
-        new OBJECT(LADDER, SCREEN_WIDTH / 2, SCREEN_HEIGHT / 1.25, &ladderSheet,
-                   &frameCounter);
-    objectList[objectListMaxIndex++] =
-        new OBJECT(LADDER_TOP, SCREEN_WIDTH / 2, SCREEN_HEIGHT / 1.30,
-                   &ladderSheet, &frameCounter);
+        new OBJECT(LADDER_TOP, SCREEN_WIDTH / 2, SCREEN_HEIGHT / 1.30, &delta,
+                   &ladderSheet);
 
-    objectList[objectListMaxIndex++] =
-        new OBJECT(ENEMY, SCREEN_WIDTH / 3, SCREEN_HEIGHT / 1.1, &barrelSheet,
-                   &frameCounter);
+    objectList[objectListMaxIndex++] = new OBJECT(
+        ENEMY, SCREEN_WIDTH / 3, SCREEN_HEIGHT / 1.1, &delta, &barrelSheet);
 
     Player player(SCREEN_WIDTH / 2, SCREEN_HEIGHT / 3, &delta, &palyerSheet,
-                  &frameCounter, objectList, objectListMaxIndex);
+                  objectList, objectListMaxIndex);
 
     while (!quit) {
         t2 = SDL_GetTicks();
@@ -648,8 +606,6 @@ extern "C"
         }
 
         frames++;
-        frameCounter += delta * 200;
-        if (frameCounter > 1000) frameCounter = 0;
 
         // // Sztuczne opóźnienie
         // for (int i = 0; i < 1000; i++) printf("  \b\b");
