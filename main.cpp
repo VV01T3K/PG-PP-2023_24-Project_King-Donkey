@@ -411,6 +411,8 @@ void createLevel_1(OBJECT **objectList, int max, Player &player) {
 
     // MAX 10 objects of the same type
     // NEXT(OBJECT_TYPE) | place(x, y) each TILE_SIZE
+    player.place(-10, -5.5);
+    objectList[NEXT(PLATFORM_SHORT)]->place(-10, -7);
     objectList[NEXT(PLATFORM_MEDIUM)]->place(6, -1);
     objectList[NEXT(LADDER_MEDIUM)]->place(7, -1);
     objectList[NEXT(LADDER_TOP)]->place(7, -1);
@@ -423,6 +425,43 @@ void createLevel_1(OBJECT **objectList, int max, Player &player) {
 
     objectList[NEXT(LADDER_SHORT)]->place(3, 3);
     objectList[NEXT(LADDER_TOP)]->place(3, 3);
+
+    objectList[WIN_]->place(-8, 5.5);
+}
+void createLevel_2(OBJECT **objectList, int max, Player &player) {
+    __BUILDLEVEL_PREPARE__
+
+    // MAX 10 objects of the same type
+    // NEXT(OBJECT_TYPE) | place(x, y) each TILE_SIZE
+    player.place(10, -5.5);
+    objectList[NEXT(PLATFORM_SHORT)]->place(10, -7);
+    objectList[NEXT(PLATFORM_SHORT)]->place(2, -7);
+    objectList[NEXT(PLATFORM_SHORT)]->place(-6, -7);
+    objectList[NEXT(LADDER_MEDIUM)]->place(-12, -2);
+    objectList[NEXT(LADDER_TOP)]->place(-12, -2);
+    objectList[NEXT(PLATFORM_SHORT)]->place(-10, -2);
+
+    objectList[NEXT(PLATFORM_LONG)]->place(2, 1);
+    objectList[NEXT(LADDER_SHORT)]->place(-4, 1);
+    objectList[NEXT(LADDER_TOP)]->place(-4, 1);
+    objectList[NEXT(LADDER_SHORT)]->place(-1, 1);
+    objectList[NEXT(LADDER_TOP)]->place(-1, 1);
+    objectList[NEXT(LADDER_SHORT)]->place(2, 1);
+    objectList[NEXT(LADDER_TOP)]->place(2, 1);
+
+    objectList[NEXT(PLATFORM_MEDIUM)]->place(-2, 4);
+
+    objectList[NEXT(PLATFORM_SHORT)]->place(10, 4);
+
+    objectList[WIN_]->place(-8, 5.5);
+}
+void createLevel_3(OBJECT **objectList, int max, Player &player) {
+    __BUILDLEVEL_PREPARE__
+
+    // MAX 10 objects of the same type
+    // NEXT(OBJECT_TYPE) | place(x, y) each TILE_SIZE
+    player.place(0, 0);
+    objectList[NEXT(PLATFORM_SHORT)]->place(-10, -7);
 
     objectList[WIN_]->place(-8, 5.5);
 }
@@ -594,7 +633,7 @@ extern "C"
     Player player(&delta, &palyerSheet, objectList, objectListMaxIndex, &GAME);
     player.place(0, 0);
 
-    createLevel_1(objectList, objectListMaxIndex, player);
+    createLevel_2(objectList, objectListMaxIndex, player);
 
     while (!quit) {
         t2 = SDL_GetTicks();
@@ -675,6 +714,10 @@ extern "C"
                         }
                     } else if (event.key.keysym.sym == SDLK_1) {
                         createLevel_1(objectList, objectListMaxIndex, player);
+                    } else if (event.key.keysym.sym == SDLK_2) {
+                        createLevel_2(objectList, objectListMaxIndex, player);
+                    } else if (event.key.keysym.sym == SDLK_3) {
+                        createLevel_3(objectList, objectListMaxIndex, player);
                     }
                     break;
                 case SDL_QUIT:
