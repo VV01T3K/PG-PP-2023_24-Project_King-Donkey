@@ -21,7 +21,7 @@ _Pragma("once")
 
 #define MAX_SURFACES 30
 #define MAX_TEXTURES 5
-#define MAX_OBJECTS 500
+#define MAX_OBJECTS 100
 
     typedef struct {
     SDL_Surface *sprite[9];

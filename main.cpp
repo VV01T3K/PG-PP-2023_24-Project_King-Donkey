@@ -125,14 +125,15 @@ class OBJECT {
     double getBORDER(Direction side);
     void reset();
     void place(int x, int y);
+    void destroy() { x = y = 0; };
 };
 void OBJECT::place(int x, int y) {
+    this->x = SCREEN_WIDTH / 2 + (x * TILE_SIZE);
+    this->y = SCREEN_HEIGHT / 2 + (y * TILE_SIZE);
     if (type == LADDER_TOP)
         this->y -= TILE_SIZE;
     else if (type == LADDER)
         this->y += (sheet->sprite[curent_sprite]->h - TILE_SIZE) / 2;
-    this->x = SCREEN_WIDTH / 2 + (x * TILE_SIZE);
-    this->y = SCREEN_HEIGHT / 2 + (y * TILE_SIZE);
     start_values.x = this->x;
     start_values.y = this->y;
 }
@@ -255,6 +256,7 @@ void Player::collision() {
         y -= gravity_delta;
         jump_state = 0;
         falling = 0;
+        dead_state = 1;
     }
 
     // check for collision with objects
@@ -389,9 +391,26 @@ void Player::move(Direction direction) {
     }
 }
 
-void createLevel_0(OBJECT **objectList) {
-    //
-    objectList[21]->place(0, 0);
+void createLevel_1(OBJECT **objectList, int max, Player &player) {
+    // reset
+    player.reset();
+    for (int i = 0; i < max; i++) {
+        objectList[i]->destroy();
+    }
+
+    // max index 70
+    objectList[0]->place(6, 1);
+    objectList[30]->place(7, 1);
+    objectList[60]->place(7, 1);
+    objectList[1]->place(-6, 3);
+
+    objectList[22]->place(0, 6);
+    objectList[23]->place(0, -3);
+    objectList[51]->place(0, -3);
+    objectList[62]->place(0, -3);
+
+    objectList[41]->place(3, -3);
+    objectList[63]->place(3, -3);
 }
 
 // main
@@ -446,7 +465,8 @@ extern "C"
     SDL_RenderSetLogicalSize(renderer, SCREEN_WIDTH, SCREEN_HEIGHT);
     SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
 
-    SDL_SetWindowTitle(window, "Szablon do zdania drugiego 2017");
+    SDL_SetWindowTitle(window,
+                       "Wojciech Siwiec nr 197815 - Projekt 2 - King Donkey");
 
     sdl_obj.surfaces[sdl_obj.surface_index++] = screen =
         SDL_CreateRGBSurface(0, SCREEN_WIDTH, SCREEN_HEIGHT, 32, 0x00FF0000,
@@ -536,12 +556,11 @@ extern "C"
         objectList[objectListMaxIndex++] =
             new OBJECT(LADDER_TOP, -1, &delta, &ladderSheet);
     }
-    // max 70
-
-    createLevel_0(objectList);
 
     Player player(&delta, &palyerSheet, objectList, objectListMaxIndex);
     player.place(0, 0);
+
+    createLevel_1(objectList, objectListMaxIndex, player);
 
     while (!quit) {
         t2 = SDL_GetTicks();
@@ -618,6 +637,8 @@ extern "C"
                         for (int i = 0; i < objectListMaxIndex; i++) {
                             if (objectList[i] != NULL) objectList[i]->reset();
                         }
+                    } else if (event.key.keysym.sym == SDLK_1) {
+                        createLevel_1(objectList, objectListMaxIndex, player);
                     }
                     break;
                 case SDL_QUIT:
