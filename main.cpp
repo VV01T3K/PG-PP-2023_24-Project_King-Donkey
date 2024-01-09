@@ -105,6 +105,7 @@ class OBJECT {
    public:
     SPRITESHEET_T *sheet;
     int monke_dance = 0;
+    int ready_throw = 0;
     double frameCounter = 0;
     int curent_sprite = 0;
     int anim_cycle = 0;
@@ -131,17 +132,23 @@ class OBJECT {
     void simple_animation(float speed, int start, int end, int cycle);
 };
 void OBJECT::simple_animation(float speed, int start, int end, int cycle) {
-    if (type == MONKE && monke_dance == 0) return;
+    if (type == MONKE) {
+        if (monke_dance == 0) {
+            curent_sprite = 0;
+            ready_throw = 1;
+            return;
+        };
+    }
+
     if (frameCounter >= 60 / speed) {
         frameCounter = 0;
+        if (type == MONKE) monke_dance -= 1;
         if (cycle) {
             curent_sprite++;
-            if (type == MONKE) monke_dance -= 1;
             if (curent_sprite > end) curent_sprite = start;
 
         } else {
             curent_sprite--;
-            if (type == MONKE) monke_dance -= 1;
             if (curent_sprite < start) curent_sprite = end;
         }
     }
@@ -198,7 +205,7 @@ class Barrel : public OBJECT {
     int curr_dest = 0;
     int falling = 0;
     double delay = 0;
-    int init_spawn = 0;
+    int spawned = 0;
     Direction last_direction = direction;
     void reset();
     void destroy() {
@@ -215,19 +222,20 @@ void Barrel::nextFrame(SDL_Surface *screen) {
         delay -= *delta;
         return;
     }
-    if (!init_spawn) {
-        init_spawn = 1;
+
+    if (!ready_throw && !spawned) {
+        spawned = 1;
         delay = 1;
-        monke->monke_dance += MONKE_DANCE_TIME;
+        monke->monke_dance = 4;
         return;
     }
+
+    if (!spawned) return;
+
     if (path_x[curr_dest] == 100 || path_y[curr_dest] == 100) {
-        curr_dest = 0;
-        monke->monke_dance += MONKE_DANCE_TIME;
-        delay = .9;
+        spawned = 0;
         this->reset();
     }
-
     double old_x = x;
     double old_y = y;
 
@@ -282,7 +290,6 @@ void Barrel::reset() {
     OBJECT::reset();
     falling = 0;
     delay = 0;
-    init_spawn = 0;
     curr_dest = 0;
     last_direction = direction;
 }
