@@ -201,6 +201,13 @@ class Barrel : public OBJECT {
     int init_spawn = 0;
     Direction last_direction = direction;
     void reset();
+    void destroy() {
+        x = y = 0;
+        for (int i = 0; i < PATH_LENGHT; i++) {
+            path_x[i] = 100;
+            path_y[i] = 100;
+        }
+    };
 };
 void Barrel::nextFrame(SDL_Surface *screen) {
     if (x == 0 && y == 0) return;
@@ -278,8 +285,6 @@ void Barrel::reset() {
     init_spawn = 0;
     curr_dest = 0;
     last_direction = direction;
-    x = 0;
-    y = 0;
 }
 
 class Player : public OBJECT {
@@ -633,30 +638,50 @@ void createLevel_3(OBJECT **objectList, int max, Player &player,
 
     // MAX 10 objects of the same type
     // NEXT(OBJECT_TYPE) | place(x, y) each TILE_SIZE
-    player.place(-7, -5.5);
+    player.place(10, -3.5);
 
-    PLACE(PLATFORM_LONG, 4, -2);
-    PLACE(PLATFORM_SHORT, -9, -3);
-    PLACE(LADDER_MEDIUM, 7, -2);
-    PLACE(LADDER_TOP, 7, -2);
+    objectList[MONKE_]->place(-2, 3.7);
 
-    PLACE(PLATFORM_LONG, 0, -7);
+    double path_x0[] = {6.5, 8.5, 11.7, 100};
+    double path_y0[] = {-3, -4, -8, 100};
 
-    PLACE(PLATFORM_LONG, -4, 2);
-    PLACE(LADDER_SHORT, -4, 2);
-    PLACE(LADDER_TOP, -4, 2);
-    PLACE(LADDER_SHORT, 1, 2);
-    PLACE(LADDER_TOP, 1, 2);
+    PLACE_BARREL(-2, 3, path_x0, path_y0, 1);
+    PLACE_BARREL(-2, 3, path_x0, path_y0, 3);
 
-    PLACE(PLATFORM_MEDIUM, -6, 5);
-    PLACE(PLATFORM_MEDIUM, 2, 5);
+    double path_x1[] = {-10.5, 5, 3, 2, 100};
+    double path_y1[] = {0, -3, -4, -7.5, 100};
 
-    PLACE(LADDER_SHORT, -12, 5);
-    PLACE(LADDER_TOP, -12, 5);
+    PLACE_BARREL(-2, 3, path_x1, path_y1, 5);
+    PLACE_BARREL(-2, 3, path_x1, path_y1, 7);
 
-    PLACE(PLATFORM_SHORT, 10, 4);
+    PLACE(PLATFORM_SHORT, -2, 5);
 
-    objectList[WIN_]->place(10.5, 5);
+    PLACE(PLATFORM_SHORT, 6, -4);
+
+    PLACE(PLATFORM_MEDIUM, 7, -5);
+    PLACE(PLATFORM_SHORT, -9, -6);
+
+    PLACE(PLATFORM_SHORT, -1, -2.5);
+    PLACE(PLATFORM_SHORT, -1, -3.5);
+    PLACE(PLATFORM_SHORT, -1, -4.5);
+    PLACE(PLATFORM_SHORT, -1, -5.5);
+    PLACE(PLATFORM_SHORT, -1, -6.5);
+
+    PLACE(PLATFORM_LONG, -4, -1);
+    PLACE(LADDER_SHORT, -4, -1);
+    PLACE(LADDER_TOP, -4, -1);
+    PLACE(LADDER_SHORT, -9, -1);
+    PLACE(LADDER_TOP, -9, -1);
+
+    PLACE(PLATFORM_MEDIUM, -6, 2);
+    PLACE(PLATFORM_MEDIUM, 2, 2);
+
+    PLACE(LADDER_MEDIUM, -12, 4);
+    PLACE(LADDER_TOP, -12, 4);
+
+    PLACE(PLATFORM_SHORT, 10, 1);
+
+    objectList[WIN_]->place(10.5, 2);
 }
 
 // main

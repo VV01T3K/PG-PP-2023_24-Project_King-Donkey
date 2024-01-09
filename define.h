@@ -95,26 +95,27 @@ enum BUILDLEVEL {
     MONKE_ = 71,
 };
 
-#define __BUILDLEVEL_PREPARE__           \
-    int i = 0;                           \
-    objectList[MONKE_]->monke_dance = 0; \
-    player.reset();                      \
-    for (i = 0; i < max; i++) {          \
-        objectList[i]->destroy();        \
-    }                                    \
-    for (i = 0; i < barrelMax; i++) {    \
-        barrelList[i]->destroy();        \
-        barrelList[i]->reset();          \
-    }                                    \
-    struct {                             \
-        int PLATFORM_SHORT_ = 0;         \
-        int PLATFORM_MEDIUM_ = 0;        \
-        int PLATFORM_LONG_ = 0;          \
-        int LADDER_SHORT_ = 0;           \
-        int LADDER_MEDIUM_ = 0;          \
-        int LADDER_LONG_ = 0;            \
-        int LADDER_TOP_ = 0;             \
-        int BARREL_ = 0;                 \
+#define __BUILDLEVEL_PREPARE__             \
+    int i = 0;                             \
+    objectList[MONKE_]->monke_dance = 0;   \
+    objectList[MONKE_]->curent_sprite = 0; \
+    player.reset();                        \
+    for (i = 0; i < max; i++) {            \
+        objectList[i]->destroy();          \
+    }                                      \
+    for (i = 0; i < barrelMax; i++) {      \
+        barrelList[i]->destroy();          \
+        barrelList[i]->reset();            \
+    }                                      \
+    struct {                               \
+        int PLATFORM_SHORT_ = 0;           \
+        int PLATFORM_MEDIUM_ = 0;          \
+        int PLATFORM_LONG_ = 0;            \
+        int LADDER_SHORT_ = 0;             \
+        int LADDER_MEDIUM_ = 0;            \
+        int LADDER_LONG_ = 0;              \
+        int LADDER_TOP_ = 0;               \
+        int BARREL_ = 0;                   \
     } index;
 
 #define NEXT(obj) obj##__ + index.obj##_++
@@ -122,18 +123,14 @@ enum BUILDLEVEL {
 
 #define PLACE(obj, x, y) objectList[obj##__ + index.obj##_++]->place(x, y)
 
-// this->x = SCREEN_WIDTH / 2 + (PATH_X[i++] * TILE_SIZE);
-// this->y = SCREEN_HEIGHT / 2 - (PATH_Y[i++] * TILE_SIZE);
-#define PLACE_BARREL(x, y, PATH_X, PATH_Y, DELAY)                \
-    barrelList[index.BARREL_++]->place(x, y);                    \
-    barrelList[index.BARREL_ - 1]->delay = DELAY;                \
-    i = 0;                                                       \
-    while (path_x[i] != 100)                                     \
-        barrelList[index.BARREL_ - 1]->path_x[i] =               \
-            SCREEN_WIDTH / 2 + (PATH_X[i++] * TILE_SIZE);        \
-    barrelList[index.BARREL_ - 1]->path_x[i] = 100;              \
-    i = 0;                                                       \
-    while (path_y[i] != 100)                                     \
-        barrelList[index.BARREL_ - 1]->path_y[i] =               \
-            SCREEN_HEIGHT / 2 - (PATH_Y[i++] * TILE_SIZE) + 1.5; \
-    barrelList[index.BARREL_ - 1]->path_y[i] = 100;\
+#define PLACE_BARREL(x, y, PATH_XX, PATH_YY, DELAY)        \
+    barrelList[index.BARREL_++]->place(x, y);              \
+    barrelList[index.BARREL_ - 1]->delay = DELAY;          \
+    i = 0;                                                 \
+    while (PATH_XX[i] != 100)                              \
+        barrelList[index.BARREL_ - 1]->path_x[i] =         \
+            SCREEN_WIDTH / 2 + (PATH_XX[i++] * TILE_SIZE); \
+    i = 0;                                                 \
+    while (PATH_YY[i] != 100)                              \
+        barrelList[index.BARREL_ - 1]->path_y[i] =         \
+            SCREEN_HEIGHT / 2 - (PATH_YY[i++] * TILE_SIZE) + 1.5;\
