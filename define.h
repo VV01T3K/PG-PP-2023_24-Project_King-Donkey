@@ -36,7 +36,7 @@ typedef struct {
 } SDL_OBJECTS_T;
 
 enum Direction { RIGHT, LEFT, UP, DOWN };
-enum ObjectType { BORDER, LADDER, LADDER_TOP, PLATFORM, ENEMY, WIN, NOTHING };
+enum ObjectType { BORDER, LADDER, LADDER_TOP, PLATFORM, BARREL, WIN, NOTHING };
 enum PLATFORM_TYPE { PLATFORM_SHORT, PLATFORM_MEDIUM, PLATFORM_LONG };
 enum LADDER_TYPE { LADDER_SHORT, LADDER_MEDIUM, LADDER_LONG };
 
@@ -82,6 +82,7 @@ typedef struct {
         int LADDER_MEDIUM_ = 0;     \
         int LADDER_LONG_ = 0;       \
         int LADDER_TOP_ = 0;        \
+        int BARREL_ = 0;            \
     } index;
 
 enum BUILDLEVEL {
@@ -92,7 +93,8 @@ enum BUILDLEVEL {
     LADDER_MEDIUM__ = 30,
     LADDER_LONG__ = 50,
     LADDER_TOP__ = 60,
-    WIN_ = 70
+    BARREL__ = 70,
+    WIN_ = 80
 };
 
 #define NEXT(obj) obj##__ + index.obj##_++

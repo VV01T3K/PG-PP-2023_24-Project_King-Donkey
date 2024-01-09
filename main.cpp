@@ -250,8 +250,8 @@ void Player::nextFrame(SDL_Surface *screen) {
     ladder_top = 0;
 
     collision();
-
     draw(screen);
+
     delta_x = 0;
     delta_y = 0;
 }
@@ -324,11 +324,15 @@ void Player::collision() {
                 zatrzymantko = 0;
             }
         }
-        if (objectList[i]->type == ENEMY) {
-            if (getBORDER(DOWN) > objectList[i]->getBORDER(UP) &&
-                getBORDER(LEFT) < objectList[i]->getBORDER(RIGHT) &&
-                getBORDER(RIGHT) > objectList[i]->getBORDER(LEFT) &&
-                getBORDER(UP) < objectList[i]->getBORDER(DOWN)) {
+        if (objectList[i]->type == BARREL) {
+            if (getBORDER(DOWN) - (TILE_SIZE / 3) >
+                    objectList[i]->getBORDER(UP) &&
+                getBORDER(LEFT) - (TILE_SIZE / 3) <
+                    objectList[i]->getBORDER(RIGHT) &&
+                getBORDER(RIGHT) - (TILE_SIZE / 3) >
+                    objectList[i]->getBORDER(LEFT) &&
+                getBORDER(UP) - (TILE_SIZE / 3) <
+                    objectList[i]->getBORDER(DOWN)) {
                 UNALIVE = 1;
             }
         }
@@ -358,6 +362,16 @@ void Player::animate() {
         curent_sprite = 8;
         return;
     }
+
+    if (GAME->playing == 0) {
+        if (frameCounter >= 30) {
+            frameCounter = 0;
+            curent_sprite++;
+            if (curent_sprite > 5) curent_sprite = 0;
+        }
+        return;
+    }
+
     if (ladder_state) {
         if (curent_sprite != 6 && curent_sprite != 7) curent_sprite = 6;
         if (frameCounter >= 60 && moving) {
@@ -431,6 +445,7 @@ void createLevel_1(OBJECT **objectList, int max, Player &player) {
     // MAX 10 objects of the same type
     // NEXT(OBJECT_TYPE) | place(x, y) each TILE_SIZE
     player.place(-10, -5.5);
+    PLACE(BARREL, 0, -5);
 
     PLACE(PLATFORM_SHORT, -10, -7);
     PLACE(PLATFORM_MEDIUM, 6, -1);
@@ -659,10 +674,10 @@ extern "C"
             new OBJECT(LADDER_TOP, 0, &delta, &ladderSheet);
     }
 
-    // for (int i = 0; i < 10; i++) {
-    //     objectList[objectListMaxIndex++] =
-    //         new OBJECT(ENEMY, 0, &delta, &barrelSheet);
-    // }
+    for (int i = 0; i < 10; i++) {
+        objectList[objectListMaxIndex++] =
+            new OBJECT(BARREL, 0, &delta, &barrelSheet);
+    }
 
     for (int i = 0; i < 1; i++) {
         objectList[objectListMaxIndex++] =
