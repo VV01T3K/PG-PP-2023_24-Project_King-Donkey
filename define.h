@@ -58,6 +58,7 @@ typedef struct {
 } START_VALUES_PLAYER_T;
 
 typedef struct {
+    int playing = 1;
     int win = 0;
     int lose = 0;
     int score = 0;

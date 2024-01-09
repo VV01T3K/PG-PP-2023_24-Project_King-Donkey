@@ -121,7 +121,12 @@ class OBJECT {
         start_values.curent_sprite = curent_sprite;
         start_values.anim_cycle = anim_cycle;
     }
-
+    void animation() {
+        if (frameCounter >= 60) {
+            frameCounter = 0;
+            curent_sprite = curent_sprite == 0 ? 1 : 0;
+        }
+    }
     void draw(SDL_Surface *screen);
     double getBORDER(Direction side);
     void reset();
@@ -220,11 +225,17 @@ void Player::reset() {
     falling = starting_values.falling;
 }
 void Player::jump() {
-    if (jump_state || ladder_state || dead_state || falling) return;
+    if (jump_state || ladder_state || dead_state || falling || !GAME->playing)
+        return;
     jump_state = 1;
     gravity = max_gravity * -(JUMP_HEIGHT)*speed;
 }
 void Player::nextFrame(SDL_Surface *screen) {
+    if (GAME->playing == 0) {
+        draw(screen);
+        return;
+    }
+
     if (gravity < max_gravity) gravity += *delta * max_gravity * 4;
     if (gravity > max_gravity) gravity = max_gravity;
 
@@ -326,7 +337,11 @@ void Player::collision() {
                 getBORDER(LEFT) < objectList[i]->getBORDER(RIGHT) &&
                 getBORDER(RIGHT) > objectList[i]->getBORDER(LEFT) &&
                 getBORDER(UP) < objectList[i]->getBORDER(DOWN)) {
-                GAME->win += 1;
+                if (GAME->playing) {
+                    GAME->win += 1;
+                    GAME->score += 100;
+                    GAME->playing = 0;
+                }
             }
         }
     }
@@ -374,7 +389,7 @@ void Player::animate() {
     }
 }
 void Player::move(Direction direction) {
-    if (dead_state) return;
+    if (dead_state || !GAME->playing) return;
     double distance = 0;
     if (ladder_state) {
         switch (direction) {
@@ -616,7 +631,7 @@ extern "C"
         }
     }
     SPRITESHEET_T winSheet;
-    for (int i = 0; i < 1; i++) {
+    for (int i = 0; i < 2; i++) {
         sprintf(text, "Win/%d", i);
         if (load_image_into_surface(&(winSheet.sprite[i]), text, &sdl_obj) !=
             0) {
@@ -659,7 +674,7 @@ extern "C"
     Player player(&delta, &palyerSheet, objectList, objectListMaxIndex, &GAME);
     player.place(0, 0);
 
-    createLevel_3(objectList, objectListMaxIndex, player);
+    createLevel_1(objectList, objectListMaxIndex, player);
 
     while (!quit) {
         t2 = SDL_GetTicks();
@@ -673,7 +688,7 @@ extern "C"
         delta = (t2 - t1) * 0.001;
         t1 = t2;
 
-        worldTime += delta;
+        if (GAME.playing) worldTime += delta;
 
         SDL_FillRect(screen, NULL, granatowy);
 
@@ -701,9 +716,9 @@ extern "C"
         //            %.0lf frames / s"
 
         sprintf(text,
-                "Wojciech Siwiec nr 197815, czas trwania = %.1lfs"
+                "Wojciech Siwiec nr 197815, czas trwania = %.1lfs%s"
                 " | %.0lf/fps ",
-                worldTime, fps);
+                worldTime, (GAME.playing ? "" : " STOPED"), fps);
         DrawString(screen, screen->w / 2 - strlen(text) * 8 / 2, 10, text,
                    charset);
         //	      "Esc - exit, \030 - faster, \031 - slower"
@@ -726,7 +741,7 @@ extern "C"
 
         // obs�uga zdarze� (o ile jakie� zasz�y) / handling of events (if
         // there were any)
-
+        int build_level = 0;
         while (SDL_PollEvent(&event)) {
             switch (event.type) {
                 case SDL_KEYDOWN:
@@ -734,16 +749,21 @@ extern "C"
                         quit = 1;
                     else if (event.key.keysym.sym == SDLK_n) {
                         worldTime = 0;
+                        GAME.score = 0;
+                        GAME.lives = 3;
+                        GAME.win = 0;
+                        GAME.lose = 0;
                         player.reset();
-                        for (int i = 0; i < objectListMaxIndex; i++) {
-                            if (objectList[i] != NULL) objectList[i]->reset();
-                        }
+                        build_level = 1;
                     } else if (event.key.keysym.sym == SDLK_1) {
-                        createLevel_1(objectList, objectListMaxIndex, player);
+                        GAME.level = 1;
+                        build_level = 1;
                     } else if (event.key.keysym.sym == SDLK_2) {
-                        createLevel_2(objectList, objectListMaxIndex, player);
+                        GAME.level = 2;
+                        build_level = 1;
                     } else if (event.key.keysym.sym == SDLK_3) {
-                        createLevel_3(objectList, objectListMaxIndex, player);
+                        GAME.level = 3;
+                        build_level = 1;
                     }
                     break;
                 case SDL_QUIT:
@@ -751,6 +771,21 @@ extern "C"
                     break;
             };
         };
+        if (build_level) {
+            GAME.playing = 1;
+            switch (GAME.level) {
+                case 1:
+                    createLevel_1(objectList, objectListMaxIndex, player);
+                    break;
+                case 2:
+                    createLevel_2(objectList, objectListMaxIndex, player);
+                    break;
+                case 3:
+                    createLevel_3(objectList, objectListMaxIndex, player);
+                    break;
+            }
+        }
+
         player.moving = 0;
         keystate = SDL_GetKeyboardState(NULL);
         if (keystate[SDL_SCANCODE_RIGHT] || keystate[SDL_SCANCODE_D]) {
