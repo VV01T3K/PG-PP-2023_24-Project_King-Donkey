@@ -112,6 +112,7 @@ class OBJECT {
     double x = 0;
     double y = 0;
     START_VALUES_OBJECT_T start_values;
+    Direction direction = RIGHT;
 
     OBJECT(int type, int sprite_type, double *delta, SPRITESHEET_T *sheet)
         : type(type), sheet(sheet), delta(delta), curent_sprite(sprite_type) {
@@ -167,7 +168,6 @@ class Player : public OBJECT {
    private:
     OBJECT **objectList;
     int objectListSize;
-    Direction direction = RIGHT;
     double speed = 1.5;
     double max_gravity = 2;
     double gravity;
@@ -416,19 +416,20 @@ void createLevel_1(OBJECT **objectList, int max, Player &player) {
     // MAX 10 objects of the same type
     // NEXT(OBJECT_TYPE) | place(x, y) each TILE_SIZE
     player.place(-10, -5.5);
-    objectList[NEXT(PLATFORM_SHORT)]->place(-10, -7);
-    objectList[NEXT(PLATFORM_MEDIUM)]->place(6, -1);
-    objectList[NEXT(LADDER_MEDIUM)]->place(7, -1);
-    objectList[NEXT(LADDER_TOP)]->place(7, -1);
-    objectList[NEXT(PLATFORM_MEDIUM)]->place(-6, -3);
 
-    objectList[NEXT(PLATFORM_LONG)]->place(0, -6);
-    objectList[NEXT(PLATFORM_LONG)]->place(0, 3);
-    objectList[NEXT(LADDER_MEDIUM)]->place(0, 3);
-    objectList[NEXT(LADDER_TOP)]->place(0, 3);
+    PLACE(PLATFORM_SHORT, -10, -7);
+    PLACE(PLATFORM_MEDIUM, 6, -1);
+    PLACE(LADDER_MEDIUM, 7, -1);
+    PLACE(LADDER_TOP, 7, -1);
+    PLACE(PLATFORM_MEDIUM, -6, -3);
 
-    objectList[NEXT(LADDER_SHORT)]->place(3, 3);
-    objectList[NEXT(LADDER_TOP)]->place(3, 3);
+    PLACE(PLATFORM_LONG, 0, -6);
+    PLACE(PLATFORM_LONG, 0, 3);
+    PLACE(LADDER_MEDIUM, 0, 3);
+    PLACE(LADDER_TOP, 0, 3);
+
+    PLACE(LADDER_SHORT, 3, 3);
+    PLACE(LADDER_TOP, 3, 3);
 
     objectList[WIN_]->place(-6.5, 4);
 }
@@ -438,24 +439,25 @@ void createLevel_2(OBJECT **objectList, int max, Player &player) {
     // MAX 10 objects of the same type
     // NEXT(OBJECT_TYPE) | place(x, y) each TILE_SIZE
     player.place(10, -5.5);
-    objectList[NEXT(PLATFORM_SHORT)]->place(10, -7);
-    objectList[NEXT(PLATFORM_SHORT)]->place(2, -7);
-    objectList[NEXT(PLATFORM_SHORT)]->place(-6, -7);
-    objectList[NEXT(LADDER_MEDIUM)]->place(-12, -2);
-    objectList[NEXT(LADDER_TOP)]->place(-12, -2);
-    objectList[NEXT(PLATFORM_SHORT)]->place(-10, -2);
 
-    objectList[NEXT(PLATFORM_LONG)]->place(2, 1);
-    objectList[NEXT(LADDER_SHORT)]->place(-4, 1);
-    objectList[NEXT(LADDER_TOP)]->place(-4, 1);
-    objectList[NEXT(LADDER_SHORT)]->place(-1, 1);
-    objectList[NEXT(LADDER_TOP)]->place(-1, 1);
-    objectList[NEXT(LADDER_SHORT)]->place(2, 1);
-    objectList[NEXT(LADDER_TOP)]->place(2, 1);
+    PLACE(PLATFORM_SHORT, 10, -7);
+    PLACE(PLATFORM_SHORT, 2, -7);
+    PLACE(PLATFORM_SHORT, -6, -7);
+    PLACE(LADDER_MEDIUM, -12, -2);
+    PLACE(LADDER_TOP, -12, -2);
+    PLACE(PLATFORM_SHORT, -10, -2);
 
-    objectList[NEXT(PLATFORM_MEDIUM)]->place(-2, 4);
+    PLACE(PLATFORM_LONG, 2, 1);
+    PLACE(LADDER_SHORT, -4, 1);
+    PLACE(LADDER_TOP, -4, 1);
+    PLACE(LADDER_SHORT, -1, 1);
+    PLACE(LADDER_TOP, -1, 1);
+    PLACE(LADDER_SHORT, 2, 1);
+    PLACE(LADDER_TOP, 2, 1);
 
-    objectList[NEXT(PLATFORM_SHORT)]->place(10, 4);
+    PLACE(PLATFORM_MEDIUM, -2, 4);
+
+    PLACE(PLATFORM_SHORT, 10, 4);
 
     objectList[WIN_]->place(-9.5, 5.5);
 }
@@ -466,26 +468,26 @@ void createLevel_3(OBJECT **objectList, int max, Player &player) {
     // NEXT(OBJECT_TYPE) | place(x, y) each TILE_SIZE
     player.place(-7, -5.5);
 
-    objectList[NEXT(PLATFORM_LONG)]->place(4, -2);
-    objectList[NEXT(PLATFORM_SHORT)]->place(-9, -3);
-    objectList[NEXT(LADDER_MEDIUM)]->place(7, -2);
-    objectList[NEXT(LADDER_TOP)]->place(7, -2);
+    PLACE(PLATFORM_LONG, 4, -2);
+    PLACE(PLATFORM_SHORT, -9, -3);
+    PLACE(LADDER_MEDIUM, 7, -2);
+    PLACE(LADDER_TOP, 7, -2);
 
-    objectList[NEXT(PLATFORM_LONG)]->place(0, -7);
+    PLACE(PLATFORM_LONG, 0, -7);
 
-    objectList[NEXT(PLATFORM_LONG)]->place(-4, 2);
-    objectList[NEXT(LADDER_SHORT)]->place(-4, 2);
-    objectList[NEXT(LADDER_TOP)]->place(-4, 2);
-    objectList[NEXT(LADDER_SHORT)]->place(1, 2);
-    objectList[NEXT(LADDER_TOP)]->place(1, 2);
+    PLACE(PLATFORM_LONG, -4, 2);
+    PLACE(LADDER_SHORT, -4, 2);
+    PLACE(LADDER_TOP, -4, 2);
+    PLACE(LADDER_SHORT, 1, 2);
+    PLACE(LADDER_TOP, 1, 2);
 
-    objectList[NEXT(PLATFORM_MEDIUM)]->place(-6, 5);
-    objectList[NEXT(PLATFORM_MEDIUM)]->place(2, 5);
+    PLACE(PLATFORM_MEDIUM, -6, 5);
+    PLACE(PLATFORM_MEDIUM, 2, 5);
 
-    objectList[NEXT(LADDER_SHORT)]->place(-12, 5);
-    objectList[NEXT(LADDER_TOP)]->place(-12, 5);
+    PLACE(LADDER_SHORT, -12, 5);
+    PLACE(LADDER_TOP, -12, 5);
 
-    objectList[NEXT(PLATFORM_SHORT)]->place(10, 4);
+    PLACE(PLATFORM_SHORT, 10, 4);
 
     objectList[WIN_]->place(10.5, 5);
 }
@@ -684,7 +686,7 @@ extern "C"
             frames = 0;
             fpsTimer -= 0.5;
         };
-        sprintf(text, "Zaimplementowane: ");
+        sprintf(text, "Zaimplementowane: -A, B ");
         DrawString(screen, start_x, start_y - 16, text, charset);
 
         sprintf(text,

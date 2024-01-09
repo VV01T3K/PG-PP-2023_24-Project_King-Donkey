@@ -95,3 +95,5 @@ enum BUILDLEVEL {
 };
 
 #define NEXT(obj) obj##__ + index.obj##_++
+
+#define PLACE(obj, x, y) objectList[obj##__ + index.obj##_++]->place(x, y)
