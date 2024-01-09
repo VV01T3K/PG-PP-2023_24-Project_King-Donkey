@@ -24,7 +24,7 @@ _Pragma("once")
 #define MAX_OBJECTS 200
 #define MAX_BARRELS 10
 
-#define BARREL_SPEED 3
+#define BARREL_SPEED 1
 #define PATH_LENGHT 20
 #define MONKE_DANCE_TIME 4
 
@@ -98,6 +98,8 @@ enum BUILDLEVEL {
 #define __BUILDLEVEL_PREPARE__             \
     int i = 0;                             \
     objectList[MONKE_]->curent_sprite = 0; \
+    objectList[MONKE_]->ready_throw = 0;   \
+    objectList[MONKE_]->monke_dance = 0;   \
     player.reset();                        \
     for (i = 0; i < max; i++) {            \
         objectList[i]->destroy();          \

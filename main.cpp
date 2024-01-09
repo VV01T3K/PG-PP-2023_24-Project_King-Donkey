@@ -292,6 +292,7 @@ void Barrel::reset() {
     delay = 0;
     curr_dest = 0;
     last_direction = direction;
+    spawned = 0;
 }
 
 class Player : public OBJECT {
