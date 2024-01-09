@@ -200,6 +200,7 @@ class Barrel : public OBJECT {
     double delay = 0;
     int init_spawn = 0;
     Direction last_direction = direction;
+    void reset();
 };
 void Barrel::nextFrame(SDL_Surface *screen) {
     if (x == 0 && y == 0) return;
@@ -269,6 +270,16 @@ void Barrel::nextFrame(SDL_Surface *screen) {
     last_direction = direction;
     OBJECT::simple_animation(2, start, end, anim_cycle);
     OBJECT::draw(screen);
+}
+void Barrel::reset() {
+    OBJECT::reset();
+    falling = 0;
+    delay = 0;
+    init_spawn = 0;
+    curr_dest = 0;
+    last_direction = direction;
+    x = 0;
+    y = 0;
 }
 
 class Player : public OBJECT {

@@ -83,26 +83,6 @@ typedef struct {
 
 // BUILD_LEVEL
 
-#define __BUILDLEVEL_PREPARE__        \
-    int i = 0;                        \
-    player.reset();                   \
-    for (i = 0; i < max; i++) {       \
-        objectList[i]->destroy();     \
-    }                                 \
-    for (i = 0; i < barrelMax; i++) { \
-        barrelList[i]->destroy();     \
-    }                                 \
-    struct {                          \
-        int PLATFORM_SHORT_ = 0;      \
-        int PLATFORM_MEDIUM_ = 0;     \
-        int PLATFORM_LONG_ = 0;       \
-        int LADDER_SHORT_ = 0;        \
-        int LADDER_MEDIUM_ = 0;       \
-        int LADDER_LONG_ = 0;         \
-        int LADDER_TOP_ = 0;          \
-        int BARREL_ = 0;              \
-    } index;
-
 enum BUILDLEVEL {
     PLATFORM_SHORT__ = 10,
     PLATFORM_MEDIUM__ = 0,
@@ -114,6 +94,28 @@ enum BUILDLEVEL {
     WIN_ = 70,
     MONKE_ = 71,
 };
+
+#define __BUILDLEVEL_PREPARE__           \
+    int i = 0;                           \
+    objectList[MONKE_]->monke_dance = 0; \
+    player.reset();                      \
+    for (i = 0; i < max; i++) {          \
+        objectList[i]->destroy();        \
+    }                                    \
+    for (i = 0; i < barrelMax; i++) {    \
+        barrelList[i]->destroy();        \
+        barrelList[i]->reset();          \
+    }                                    \
+    struct {                             \
+        int PLATFORM_SHORT_ = 0;         \
+        int PLATFORM_MEDIUM_ = 0;        \
+        int PLATFORM_LONG_ = 0;          \
+        int LADDER_SHORT_ = 0;           \
+        int LADDER_MEDIUM_ = 0;          \
+        int LADDER_LONG_ = 0;            \
+        int LADDER_TOP_ = 0;             \
+        int BARREL_ = 0;                 \
+    } index;
 
 #define NEXT(obj) obj##__ + index.obj##_++
 #define LAST(obj) obj##__ + index.obj##_ - 1
