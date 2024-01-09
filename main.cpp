@@ -137,7 +137,7 @@ void OBJECT::simple_animation(float speed, int start, int end, int cycle) {
             if (curent_sprite > end) curent_sprite = start;
         } else {
             curent_sprite--;
-            if (curent_sprite < start) curent_sprite = start;
+            if (curent_sprite < start) curent_sprite = end;
         }
     }
 }
@@ -186,11 +186,12 @@ class Barrel : public OBJECT {
     }
     void nextFrame(SDL_Surface *screen);
     int start = 0, end = 0;
-    int path_x[PATH_LENGHT] = {0};
-    int path_y[PATH_LENGHT] = {0};
+    double path_x[PATH_LENGHT] = {100};
+    double path_y[PATH_LENGHT] = {100};
     int curr_dest = 0;
     int falling = 0;
     double delay = 0;
+    Direction last_direction = direction;
 };
 void Barrel::nextFrame(SDL_Surface *screen) {
     if (x == 0 && y == 0) return;
@@ -198,20 +199,24 @@ void Barrel::nextFrame(SDL_Surface *screen) {
         delay -= *delta;
         return;
     }
+    if (path_x[curr_dest] == 100 || path_y[curr_dest] == 100) {
+        curr_dest = 0;
+        printf("Barrel path error\n");
+        this->reset();
+    }
+
     double old_x = x;
     double old_y = y;
 
+    direction = DOWN;
     if (falling && y < path_y[curr_dest]) {
         y += *delta * 200 * BARREL_SPEED;
-        direction = DOWN;
     }
     if (!falling) {
         if (x < path_x[curr_dest])
             direction = RIGHT;
         else if (x > path_x[curr_dest])
             direction = LEFT;
-    } else {
-        direction = DOWN;
     }
 
     anim_cycle = 0;
@@ -242,12 +247,11 @@ void Barrel::nextFrame(SDL_Surface *screen) {
         curr_dest++;
         falling = 0;
         direction = DOWN;
+        start = 4;
+        end = 5;
     }
-    if (path_x[curr_dest] == 0 || path_y[curr_dest] == 0) {
-        curr_dest = 0;
-        this->reset();
-    }
-
+    if (last_direction != direction) frameCounter = 500;
+    last_direction = direction;
     OBJECT::simple_animation(2, start, end, anim_cycle);
     OBJECT::draw(screen);
 }
@@ -534,19 +538,19 @@ void createLevel_1(OBJECT **objectList, int max, Player &player,
 
     // MAX 10 objects of the same type
     // NEXT(OBJECT_TYPE) | place(x, y) each TILE_SIZE
-    player.place(-10, -5.5);
+    player.place(-9, -5.5);
 
-    int path_x[] = {1, 3, 0};
-    int path_y[] = {-1, -3, 0};
-    PLACE_BARREL(-7, 4, path_x, path_y, 0);
+    double path_x[] = {8.5, 1.5, -7.5, -10.5, -10.5, 100};
+    double path_y[] = {0, -5, -6, -7, -7.5, 100};
+    PLACE_BARREL(6, 4, path_x, path_y, 0);
 
-    PLACE(PLATFORM_SHORT, -10, -7);
+    PLACE(PLATFORM_SHORT, -8, -7);
     PLACE(PLATFORM_MEDIUM, 6, -1);
     PLACE(LADDER_MEDIUM, 7, -1);
     PLACE(LADDER_TOP, 7, -1);
     PLACE(PLATFORM_MEDIUM, -6, -3);
 
-    PLACE(PLATFORM_LONG, 0, -6);
+    PLACE(PLATFORM_LONG, 1, -6);
     PLACE(PLATFORM_LONG, 0, 3);
     PLACE(LADDER_MEDIUM, 0, 3);
     PLACE(LADDER_TOP, 0, 3);
