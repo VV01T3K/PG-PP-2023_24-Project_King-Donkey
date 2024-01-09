@@ -428,6 +428,14 @@ void Player::collision() {
                 }
             }
         }
+        if (objectList[i]->type == MONKE) {
+            if (getBORDER(DOWN) > objectList[i]->getBORDER(UP) &&
+                getBORDER(LEFT) < objectList[i]->getBORDER(RIGHT) &&
+                getBORDER(RIGHT) > objectList[i]->getBORDER(LEFT) &&
+                getBORDER(UP) < objectList[i]->getBORDER(DOWN)) {
+                UNALIVE = 1;
+            }
+        }
     }
     for (int i = 0; i < barrelListMaxIndex; i++) {
         if (barrelList[i] == NULL) continue;
@@ -539,6 +547,8 @@ void createLevel_1(OBJECT **objectList, int max, Player &player,
     // MAX 10 objects of the same type
     // NEXT(OBJECT_TYPE) | place(x, y) each TILE_SIZE
     player.place(-9, -5.5);
+
+    objectList[MONKE_]->place(0, 0);
 
     double path_x[] = {8.5, 1.5, -7.5, -10.5, -10.5, 100};
     double path_y[] = {0, -5, -6, -7, -7.5, 100};
@@ -753,6 +763,15 @@ extern "C"
         }
     }
 
+    SPRITESHEET_T monkeSheet;
+    for (int i = 0; i < 1; i++) {
+        sprintf(text, "Monke/%d", i);
+        if (load_image_into_surface(&(monkeSheet.sprite[i]), text, &sdl_obj) !=
+            0) {
+            return 1;
+        }
+    }
+
     OBJECT *objectList[MAX_OBJECTS];
     int objectListMaxIndex = 0;
 
@@ -776,6 +795,11 @@ extern "C"
     for (int i = 0; i < 1; i++) {
         objectList[objectListMaxIndex++] =
             new OBJECT(WIN, 0, &delta, &winSheet);
+    }
+
+    for (int i = 0; i < 1; i++) {
+        objectList[objectListMaxIndex++] =
+            new OBJECT(MONKE, 0, &delta, &monkeSheet);
     }
 
     Barrel *barrelList[MAX_BARRELS];
