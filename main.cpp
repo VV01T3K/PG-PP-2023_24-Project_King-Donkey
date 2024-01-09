@@ -128,12 +128,6 @@ class OBJECT {
     void place(float x, float y);
     void destroy() { x = y = 0; };
     void simple_animation(int speed, int start, int end);
-
-    PATH_T path;
-
-   private:
-    void barrel();
-    int start, end;
 };
 void OBJECT::simple_animation(int speed, int start, int end) {
     if (frameCounter >= 60 / speed) {
@@ -171,32 +165,8 @@ double OBJECT::getBORDER(Direction side) {
             return 0;
     }
 }
-void OBJECT::barrel() {
-    if (frameCounter >= 60) {
-        printf("PATH: %d\n", path.x[10]);
-    }
-
-    switch (direction) {
-        case RIGHT:
-            x += *delta * 90 * BARREL_SPEED;
-            start = 2;
-            end = 3;
-            break;
-        case LEFT:
-            x -= *delta * 90 * BARREL_SPEED;
-            start = 0;
-            end = 1;
-            break;
-        case UP:
-            y -= *delta * 90 * BARREL_SPEED;
-        case DOWN:
-            y += *delta * 90 * BARREL_SPEED;
-    }
-    simple_animation(1, start, end);
-}
 void OBJECT::draw(SDL_Surface *screen) {
     if (x == 0 && y == 0) return;
-    if (type == BARREL) barrel();
     DrawSurface(screen, sheet->sprite[curent_sprite], x, y);
     frameCounter += *delta * 200;
     if (frameCounter > 1000) frameCounter = 0;
@@ -208,11 +178,43 @@ class Barrel : public OBJECT {
         : OBJECT(BARREL, 0, delta, sheet) {
         this->direction = RIGHT;
     }
+    void nextFrame(SDL_Surface *screen);
+    int go = 0;
+    int start = 0, end = 0;
+    int path_x[PATH_LENGHT] = {0};
 };
+void Barrel::nextFrame(SDL_Surface *screen) {
+    if (x == 0 && y == 0) return;
+
+    if (frameCounter >= 60) {
+        printf("%d", path_x[0]);
+    }
+
+    // switch (direction) {
+    //     case RIGHT:
+    //         x += *delta * 90 * BARREL_SPEED;
+    //         start = 2;
+    //         end = 3;
+    //         break;
+    //     case LEFT:
+    //         x -= *delta * 90 * BARREL_SPEED;
+    //         start = 0;
+    //         end = 1;
+    //         break;
+    //     case UP:
+    //         y -= *delta * 90 * BARREL_SPEED;
+    //     case DOWN:
+    //         y += *delta * 90 * BARREL_SPEED;
+    // }
+    OBJECT::simple_animation(1, start, end);
+    OBJECT::draw(screen);
+}
 
 class Player : public OBJECT {
    private:
     OBJECT **objectList;
+    Barrel **barrelList;
+    int barrelListMaxIndex;
     int objectListSize;
     double speed = 1.5;
     double max_gravity = 2;
@@ -232,11 +234,14 @@ class Player : public OBJECT {
     int moving = 0;
     int falling = 1;
     Player(double *delta, SPRITESHEET_T *sheet, OBJECT **objectList,
-           int objectListSize, GAME_T *GAME)
+           int objectListSize, GAME_T *GAME, Barrel **barrelList,
+           int barrelListMaxIndex)
         : OBJECT(0, 0, delta, sheet),
           objectList(objectList),
           objectListSize(objectListSize),
-          GAME(GAME) {
+          GAME(GAME),
+          barrelList(barrelList),
+          barrelListMaxIndex(barrelListMaxIndex) {
         this->gravity = this->max_gravity;
 
         starting_values.ladder_possible = ladder_possible;
@@ -365,18 +370,6 @@ void Player::collision() {
                 zatrzymantko = 0;
             }
         }
-        if (objectList[i]->type == BARREL) {
-            if (getBORDER(DOWN) - (TILE_SIZE / 3) >
-                    objectList[i]->getBORDER(UP) &&
-                getBORDER(LEFT) - (TILE_SIZE / 3) <
-                    objectList[i]->getBORDER(RIGHT) &&
-                getBORDER(RIGHT) - (TILE_SIZE / 3) >
-                    objectList[i]->getBORDER(LEFT) &&
-                getBORDER(UP) - (TILE_SIZE / 3) <
-                    objectList[i]->getBORDER(DOWN)) {
-                UNALIVE = 1;
-            }
-        }
         if (objectList[i]->type == WIN) {
             if (getBORDER(DOWN) > objectList[i]->getBORDER(UP) &&
                 getBORDER(LEFT) < objectList[i]->getBORDER(RIGHT) &&
@@ -388,6 +381,19 @@ void Player::collision() {
                     GAME->playing = 0;
                 }
             }
+        }
+    }
+    for (int i = 0; i < barrelListMaxIndex; i++) {
+        if (barrelList[i] == NULL) continue;
+        if (barrelList[i]->type == NOTHING) continue;
+        if (barrelList[i]->x == 0 && barrelList[i]->y == 0) continue;
+        if (getBORDER(DOWN) - (TILE_SIZE / 3) > barrelList[i]->getBORDER(UP) &&
+            getBORDER(LEFT) - (TILE_SIZE / 3) <
+                barrelList[i]->getBORDER(RIGHT) &&
+            getBORDER(RIGHT) - (TILE_SIZE / 3) >
+                barrelList[i]->getBORDER(LEFT) &&
+            getBORDER(UP) - (TILE_SIZE / 3) < barrelList[i]->getBORDER(DOWN)) {
+            UNALIVE = 1;
         }
     }
 
@@ -480,18 +486,15 @@ void Player::move(Direction direction) {
         animate();
     }
 }
-void createLevel_1(OBJECT **objectList, int max, Player &player) {
+void createLevel_1(OBJECT **objectList, int max, Player &player,
+                   Barrel **barrelList, int barrelMax) {
     __BUILDLEVEL_PREPARE__
 
     // MAX 10 objects of the same type
     // NEXT(OBJECT_TYPE) | place(x, y) each TILE_SIZE
     player.place(-10, -5.5);
-    PLACE(BARREL, 0, -5);
-    int path_x[] = {0};
-    int path_y[] = {0};
 
-    objectList[LAST(BARREL)]->path.x[0] = 10;
-    // SET_PATH(LAST(BARREL), path_x, path_y);
+    PLACE_BARREL(0, 0);
 
     PLACE(PLATFORM_SHORT, -10, -7);
     PLACE(PLATFORM_MEDIUM, 6, -1);
@@ -509,7 +512,8 @@ void createLevel_1(OBJECT **objectList, int max, Player &player) {
 
     objectList[WIN_]->place(-6.5, 4);
 }
-void createLevel_2(OBJECT **objectList, int max, Player &player) {
+void createLevel_2(OBJECT **objectList, int max, Player &player,
+                   Barrel **barrelList, int barrelMax) {
     __BUILDLEVEL_PREPARE__
 
     // MAX 10 objects of the same type
@@ -537,7 +541,8 @@ void createLevel_2(OBJECT **objectList, int max, Player &player) {
 
     objectList[WIN_]->place(-9.5, 5.5);
 }
-void createLevel_3(OBJECT **objectList, int max, Player &player) {
+void createLevel_3(OBJECT **objectList, int max, Player &player,
+                   Barrel **barrelList, int barrelMax) {
     __BUILDLEVEL_PREPARE__
 
     // MAX 10 objects of the same type
@@ -701,7 +706,6 @@ extern "C"
     }
 
     OBJECT *objectList[MAX_OBJECTS];
-    Barrel *barrelList[MAX_BARRELS];
     int objectListMaxIndex = 0;
 
     for (int i = 0; i < 3; i++) {
@@ -721,21 +725,25 @@ extern "C"
             new OBJECT(LADDER_TOP, 0, &delta, &ladderSheet);
     }
 
-    for (int i = 0; i < 10; i++) {
-        objectList[objectListMaxIndex++] = new Barrel(&delta, &barrelSheet);
-    }
-
     for (int i = 0; i < 1; i++) {
         objectList[objectListMaxIndex++] =
             new OBJECT(WIN, 0, &delta, &winSheet);
     }
 
+    Barrel *barrelList[MAX_BARRELS];
+    int barrelListMaxIndex = 0;
+    for (int i = 0; i < 10; i++) {
+        barrelList[barrelListMaxIndex++] = new Barrel(&delta, &barrelSheet);
+    }
+
     GAME_T GAME;
 
-    Player player(&delta, &palyerSheet, objectList, objectListMaxIndex, &GAME);
+    Player player(&delta, &palyerSheet, objectList, objectListMaxIndex, &GAME,
+                  barrelList, barrelListMaxIndex);
     player.place(0, 0);
 
-    createLevel_1(objectList, objectListMaxIndex, player);
+    createLevel_1(objectList, objectListMaxIndex, player, barrelList,
+                  barrelListMaxIndex);
 
     while (!quit) {
         t2 = SDL_GetTicks();
@@ -789,9 +797,13 @@ extern "C"
                    charset);
 
         // rysowanie obiekt�w / drawing objects
-        if (GAME.playing) objectList[WIN_]->simple_animation(1, 0, 1);
+        if (!GAME.playing) objectList[WIN_]->simple_animation(1, 0, 1);
+
         for (int i = 0; i < objectListMaxIndex; i++) {
             if (objectList[i] != NULL) objectList[i]->draw(screen);
+        }
+        for (int i = 0; i < barrelListMaxIndex; i++) {
+            if (barrelList[i] != NULL) barrelList[i]->nextFrame(screen);
         }
 
         player.nextFrame(screen);
@@ -837,13 +849,16 @@ extern "C"
             GAME.playing = 1;
             switch (GAME.level) {
                 case 1:
-                    createLevel_1(objectList, objectListMaxIndex, player);
+                    createLevel_1(objectList, objectListMaxIndex, player,
+                                  barrelList, barrelListMaxIndex);
                     break;
                 case 2:
-                    createLevel_2(objectList, objectListMaxIndex, player);
+                    createLevel_2(objectList, objectListMaxIndex, player,
+                                  barrelList, barrelListMaxIndex);
                     break;
                 case 3:
-                    createLevel_3(objectList, objectListMaxIndex, player);
+                    createLevel_3(objectList, objectListMaxIndex, player,
+                                  barrelList, barrelListMaxIndex);
                     break;
             }
         }

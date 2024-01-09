@@ -69,20 +69,23 @@ typedef struct {
 
 // BUILD_LEVEL
 
-#define __BUILDLEVEL_PREPARE__      \
-    player.reset();                 \
-    for (int i = 0; i < max; i++) { \
-        objectList[i]->destroy();   \
-    }                               \
-    struct {                        \
-        int PLATFORM_SHORT_ = 0;    \
-        int PLATFORM_MEDIUM_ = 0;   \
-        int PLATFORM_LONG_ = 0;     \
-        int LADDER_SHORT_ = 0;      \
-        int LADDER_MEDIUM_ = 0;     \
-        int LADDER_LONG_ = 0;       \
-        int LADDER_TOP_ = 0;        \
-        int BARREL_ = 0;            \
+#define __BUILDLEVEL_PREPARE__            \
+    player.reset();                       \
+    for (int i = 0; i < max; i++) {       \
+        objectList[i]->destroy();         \
+    }                                     \
+    for (int i = 0; i < barrelMax; i++) { \
+        barrelList[i]->destroy();         \
+    }                                     \
+    struct {                              \
+        int PLATFORM_SHORT_ = 0;          \
+        int PLATFORM_MEDIUM_ = 0;         \
+        int PLATFORM_LONG_ = 0;           \
+        int LADDER_SHORT_ = 0;            \
+        int LADDER_MEDIUM_ = 0;           \
+        int LADDER_LONG_ = 0;             \
+        int LADDER_TOP_ = 0;              \
+        int BARREL_ = 0;                  \
     } index;
 
 enum BUILDLEVEL {
@@ -93,8 +96,7 @@ enum BUILDLEVEL {
     LADDER_MEDIUM__ = 30,
     LADDER_LONG__ = 50,
     LADDER_TOP__ = 60,
-    BARREL__ = 70,
-    WIN_ = 80
+    WIN_ = 70,
 };
 
 #define NEXT(obj) obj##__ + index.obj##_++
@@ -102,20 +104,9 @@ enum BUILDLEVEL {
 
 #define PLACE(obj, x, y) objectList[obj##__ + index.obj##_++]->place(x, y)
 
+#define PLACE_BARREL(x, y) barrelList[index.BARREL_++]->place(x, y)
+
 #define MAX_BARRELS 10
 #define BARREL_SPEED 0.5
 
 #define PATH_LENGHT 20
-
-typedef struct {
-    int cur_x = 0;
-    int cur_y = 0;
-    int x[PATH_LENGHT] = {0};
-    int y[PATH_LENGHT] = {0};
-} PATH_T;
-
-#define SET_PATH(n, PATH_X, PATH_Y)           \
-    for (int i = 0; i < PATH_LENGHT; i++) {   \
-        objectList[n]->path.x[i] = PATH_X[i]; \
-        objectList[n]->path.y[i] = PATH_Y[i]; \
-    }
