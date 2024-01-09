@@ -22,6 +22,10 @@ _Pragma("once")
 #define MAX_SURFACES 30
 #define MAX_TEXTURES 5
 #define MAX_OBJECTS 200
+#define MAX_BARRELS 10
+
+#define BARREL_SPEED .7
+#define PATH_LENGHT 20
 
     typedef struct {
     SDL_Surface *sprite[9];
@@ -35,7 +39,7 @@ typedef struct {
     int texture_index = 0;
 } SDL_OBJECTS_T;
 
-enum Direction { RIGHT, LEFT, UP, DOWN };
+enum Direction { NONE, RIGHT, LEFT, UP, DOWN };
 enum ObjectType { BORDER, LADDER, LADDER_TOP, PLATFORM, BARREL, WIN, NOTHING };
 enum PLATFORM_TYPE { PLATFORM_SHORT, PLATFORM_MEDIUM, PLATFORM_LONG };
 enum LADDER_TYPE { LADDER_SHORT, LADDER_MEDIUM, LADDER_LONG };
@@ -104,9 +108,16 @@ enum BUILDLEVEL {
 
 #define PLACE(obj, x, y) objectList[obj##__ + index.obj##_++]->place(x, y)
 
-#define PLACE_BARREL(x, y) barrelList[index.BARREL_++]->place(x, y)
-
-#define MAX_BARRELS 10
-#define BARREL_SPEED 0.5
-
-#define PATH_LENGHT 20
+// this->x = SCREEN_WIDTH / 2 + (PATH_X[i++] * TILE_SIZE);
+// this->y = SCREEN_HEIGHT / 2 - (PATH_Y[i++] * TILE_SIZE);
+#define PLACE_BARREL(x, y, PATH_X, PATH_Y, DELAY)         \
+    barrelList[index.BARREL_++]->place(x, y);             \
+    barrelList[index.BARREL_ - 1]->delay = DELAY;         \
+    int i = 0;                                            \
+    while (path_x[i] != 0)                                \
+        barrelList[index.BARREL_ - 1]->path_x[i] =        \
+            SCREEN_WIDTH / 2 + (PATH_X[i++] * TILE_SIZE); \
+    i = 0;                                                \
+    while (path_y[i] != 0)                                \
+        barrelList[index.BARREL_ - 1]->path_y[i] =        \
+            SCREEN_HEIGHT / 2 - (PATH_Y[i++] * TILE_SIZE);

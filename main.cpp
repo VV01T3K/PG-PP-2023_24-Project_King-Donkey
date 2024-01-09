@@ -179,34 +179,62 @@ class Barrel : public OBJECT {
         this->direction = RIGHT;
     }
     void nextFrame(SDL_Surface *screen);
-    int go = 0;
     int start = 0, end = 0;
     int path_x[PATH_LENGHT] = {0};
+    int path_y[PATH_LENGHT] = {0};
+    int curr_dest = 0;
+    int falling = 0;
+    double delay = 0;
 };
 void Barrel::nextFrame(SDL_Surface *screen) {
     if (x == 0 && y == 0) return;
+    if (delay > 0) {
+        delay -= *delta;
+        return;
+    }
+    double old_x = x;
+    double old_y = y;
 
-    if (frameCounter >= 60) {
-        printf("%d", path_x[0]);
+    if (falling && y < path_y[curr_dest]) {
+        y += *delta * 200 * BARREL_SPEED;
+    }
+    if (!falling) {
+        if (x < path_x[curr_dest])
+            direction = RIGHT;
+        else if (x > path_x[curr_dest])
+            direction = LEFT;
+    } else {
+        direction = DOWN;
     }
 
-    // switch (direction) {
-    //     case RIGHT:
-    //         x += *delta * 90 * BARREL_SPEED;
-    //         start = 2;
-    //         end = 3;
-    //         break;
-    //     case LEFT:
-    //         x -= *delta * 90 * BARREL_SPEED;
-    //         start = 0;
-    //         end = 1;
-    //         break;
-    //     case UP:
-    //         y -= *delta * 90 * BARREL_SPEED;
-    //     case DOWN:
-    //         y += *delta * 90 * BARREL_SPEED;
-    // }
-    OBJECT::simple_animation(1, start, end);
+    switch (direction) {
+        case RIGHT:
+            x += *delta * 100 * BARREL_SPEED;
+            start = 2;
+            end = 3;
+            if (x > path_x[curr_dest]) falling = 1;
+            break;
+        case LEFT:
+            x -= *delta * 100 * BARREL_SPEED;
+            start = 0;
+            end = 1;
+            if (x < path_x[curr_dest]) falling = 1;
+            break;
+        default:
+            break;
+    }
+
+    if (old_x == x && old_y == y) {
+        curr_dest++;
+        falling = 0;
+        direction = NONE;
+    }
+    if (path_x[curr_dest] == 0 || path_y[curr_dest] == 0) {
+        curr_dest = 0;
+        this->reset();
+    }
+
+    if (direction != NONE) OBJECT::simple_animation(1, start, end);
     OBJECT::draw(screen);
 }
 
@@ -494,7 +522,10 @@ void createLevel_1(OBJECT **objectList, int max, Player &player,
     // NEXT(OBJECT_TYPE) | place(x, y) each TILE_SIZE
     player.place(-10, -5.5);
 
-    PLACE_BARREL(0, 0);
+    int path_x[] = {2, -2, 0};
+    int path_y[] = {-2, -1, 0};
+
+    PLACE_BARREL(0, 0, path_x, path_y, 1);
 
     PLACE(PLATFORM_SHORT, -10, -7);
     PLACE(PLATFORM_MEDIUM, 6, -1);
