@@ -26,6 +26,7 @@ _Pragma("once")
 
 #define BARREL_SPEED 1
 #define PATH_LENGHT 20
+#define MONKE_DANCE_TIME 4
 
     typedef struct {
     SDL_Surface *sprite[9];
@@ -82,23 +83,24 @@ typedef struct {
 
 // BUILD_LEVEL
 
-#define __BUILDLEVEL_PREPARE__            \
-    player.reset();                       \
-    for (int i = 0; i < max; i++) {       \
-        objectList[i]->destroy();         \
-    }                                     \
-    for (int i = 0; i < barrelMax; i++) { \
-        barrelList[i]->destroy();         \
-    }                                     \
-    struct {                              \
-        int PLATFORM_SHORT_ = 0;          \
-        int PLATFORM_MEDIUM_ = 0;         \
-        int PLATFORM_LONG_ = 0;           \
-        int LADDER_SHORT_ = 0;            \
-        int LADDER_MEDIUM_ = 0;           \
-        int LADDER_LONG_ = 0;             \
-        int LADDER_TOP_ = 0;              \
-        int BARREL_ = 0;                  \
+#define __BUILDLEVEL_PREPARE__        \
+    int i = 0;                        \
+    player.reset();                   \
+    for (i = 0; i < max; i++) {       \
+        objectList[i]->destroy();     \
+    }                                 \
+    for (i = 0; i < barrelMax; i++) { \
+        barrelList[i]->destroy();     \
+    }                                 \
+    struct {                          \
+        int PLATFORM_SHORT_ = 0;      \
+        int PLATFORM_MEDIUM_ = 0;     \
+        int PLATFORM_LONG_ = 0;       \
+        int LADDER_SHORT_ = 0;        \
+        int LADDER_MEDIUM_ = 0;       \
+        int LADDER_LONG_ = 0;         \
+        int LADDER_TOP_ = 0;          \
+        int BARREL_ = 0;              \
     } index;
 
 enum BUILDLEVEL {
@@ -123,7 +125,7 @@ enum BUILDLEVEL {
 #define PLACE_BARREL(x, y, PATH_X, PATH_Y, DELAY)                \
     barrelList[index.BARREL_++]->place(x, y);                    \
     barrelList[index.BARREL_ - 1]->delay = DELAY;                \
-    int i = 0;                                                   \
+    i = 0;                                                       \
     while (path_x[i] != 100)                                     \
         barrelList[index.BARREL_ - 1]->path_x[i] =               \
             SCREEN_WIDTH / 2 + (PATH_X[i++] * TILE_SIZE);        \
@@ -132,4 +134,4 @@ enum BUILDLEVEL {
     while (path_y[i] != 100)                                     \
         barrelList[index.BARREL_ - 1]->path_y[i] =               \
             SCREEN_HEIGHT / 2 - (PATH_Y[i++] * TILE_SIZE) + 1.5; \
-    barrelList[index.BARREL_ - 1]->path_y[i] = 100;
+    barrelList[index.BARREL_ - 1]->path_y[i] = 100;\

@@ -104,6 +104,7 @@ int load_image_into_surface(SDL_Surface **surface, const char *image_path,
 class OBJECT {
    public:
     SPRITESHEET_T *sheet;
+    int monke_dance = 0;
     double frameCounter = 0;
     int curent_sprite = 0;
     int anim_cycle = 0;
@@ -130,13 +131,17 @@ class OBJECT {
     void simple_animation(float speed, int start, int end, int cycle);
 };
 void OBJECT::simple_animation(float speed, int start, int end, int cycle) {
+    if (type == MONKE && monke_dance == 0) return;
     if (frameCounter >= 60 / speed) {
         frameCounter = 0;
         if (cycle) {
             curent_sprite++;
+            if (type == MONKE) monke_dance -= 1;
             if (curent_sprite > end) curent_sprite = start;
+
         } else {
             curent_sprite--;
+            if (type == MONKE) monke_dance -= 1;
             if (curent_sprite < start) curent_sprite = end;
         }
     }
@@ -180,10 +185,12 @@ void OBJECT::draw(SDL_Surface *screen) {
 
 class Barrel : public OBJECT {
    public:
-    Barrel(double *delta, SPRITESHEET_T *sheet)
+    Barrel(double *delta, SPRITESHEET_T *sheet, OBJECT *monke)
         : OBJECT(BARREL, 0, delta, sheet) {
+        this->monke = monke;
         this->direction = RIGHT;
     }
+    OBJECT *monke;
     void nextFrame(SDL_Surface *screen);
     int start = 0, end = 0;
     double path_x[PATH_LENGHT] = {100};
@@ -191,6 +198,7 @@ class Barrel : public OBJECT {
     int curr_dest = 0;
     int falling = 0;
     double delay = 0;
+    int init_spawn = 0;
     Direction last_direction = direction;
 };
 void Barrel::nextFrame(SDL_Surface *screen) {
@@ -199,9 +207,16 @@ void Barrel::nextFrame(SDL_Surface *screen) {
         delay -= *delta;
         return;
     }
+    if (!init_spawn) {
+        init_spawn = 1;
+        delay = 1;
+        monke->monke_dance += MONKE_DANCE_TIME;
+        return;
+    }
     if (path_x[curr_dest] == 100 || path_y[curr_dest] == 100) {
         curr_dest = 0;
-        printf("Barrel path error\n");
+        monke->monke_dance += MONKE_DANCE_TIME;
+        delay = .9;
         this->reset();
     }
 
@@ -548,11 +563,13 @@ void createLevel_1(OBJECT **objectList, int max, Player &player,
     // NEXT(OBJECT_TYPE) | place(x, y) each TILE_SIZE
     player.place(-9, -5.5);
 
-    objectList[MONKE_]->place(0, 0);
-
+    objectList[MONKE_]->place(6, 4.7);
     double path_x[] = {8.5, 1.5, -7.5, -10.5, -10.5, 100};
     double path_y[] = {0, -5, -6, -7, -7.5, 100};
-    PLACE_BARREL(6, 4, path_x, path_y, 0);
+    PLACE_BARREL(6, 4, path_x, path_y, 1);
+    PLACE_BARREL(6, 4, path_x, path_y, 3);
+    PLACE_BARREL(6, 4, path_x, path_y, 5);
+    PLACE_BARREL(6, 4, path_x, path_y, 7);
 
     PLACE(PLATFORM_SHORT, -8, -7);
     PLACE(PLATFORM_MEDIUM, 6, -1);
@@ -764,7 +781,7 @@ extern "C"
     }
 
     SPRITESHEET_T monkeSheet;
-    for (int i = 0; i < 1; i++) {
+    for (int i = 0; i < 4; i++) {
         sprintf(text, "Monke/%d", i);
         if (load_image_into_surface(&(monkeSheet.sprite[i]), text, &sdl_obj) !=
             0) {
@@ -792,20 +809,16 @@ extern "C"
             new OBJECT(LADDER_TOP, 0, &delta, &ladderSheet);
     }
 
-    for (int i = 0; i < 1; i++) {
-        objectList[objectListMaxIndex++] =
-            new OBJECT(WIN, 0, &delta, &winSheet);
-    }
+    objectList[objectListMaxIndex++] = new OBJECT(WIN, 0, &delta, &winSheet);
 
-    for (int i = 0; i < 1; i++) {
-        objectList[objectListMaxIndex++] =
-            new OBJECT(MONKE, 0, &delta, &monkeSheet);
-    }
+    int monkey_index = objectListMaxIndex++;
+    objectList[monkey_index] = new OBJECT(MONKE, 0, &delta, &monkeSheet);
 
     Barrel *barrelList[MAX_BARRELS];
     int barrelListMaxIndex = 0;
     for (int i = 0; i < 10; i++) {
-        barrelList[barrelListMaxIndex++] = new Barrel(&delta, &barrelSheet);
+        barrelList[barrelListMaxIndex++] =
+            new Barrel(&delta, &barrelSheet, objectList[monkey_index]);
     }
 
     GAME_T GAME;
@@ -870,6 +883,7 @@ extern "C"
 
         // rysowanie obiekt�w / drawing objects
         if (!GAME.playing) objectList[WIN_]->simple_animation(1, 0, 1, 0);
+        objectList[MONKE_]->simple_animation(1, 0, 3, 1);
 
         for (int i = 0; i < objectListMaxIndex; i++) {
             if (objectList[i] != NULL) objectList[i]->draw(screen);
