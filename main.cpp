@@ -121,18 +121,26 @@ class OBJECT {
         start_values.curent_sprite = curent_sprite;
         start_values.anim_cycle = anim_cycle;
     }
-    void animation() {
-        if (frameCounter >= 60) {
-            frameCounter = 0;
-            curent_sprite = curent_sprite == 0 ? 1 : 0;
-        }
-    }
+
     void draw(SDL_Surface *screen);
     double getBORDER(Direction side);
     void reset();
     void place(float x, float y);
     void destroy() { x = y = 0; };
+    void simple_animation(int speed, int start, int end);
+
+    PATH_T path;
+
+   private:
+    void barrel();
+    int start, end;
 };
+void OBJECT::simple_animation(int speed, int start, int end) {
+    if (frameCounter >= 60 / speed) {
+        frameCounter = 0;
+        curent_sprite = curent_sprite == end ? start : end;
+    }
+}
 void OBJECT::place(float x, float y) {
     this->x = SCREEN_WIDTH / 2 + (x * TILE_SIZE);
     this->y = SCREEN_HEIGHT / 2 - (y * TILE_SIZE);
@@ -163,12 +171,45 @@ double OBJECT::getBORDER(Direction side) {
             return 0;
     }
 }
+void OBJECT::barrel() {
+    if (frameCounter >= 60) {
+        printf("PATH: %d\n", path.x[10]);
+    }
+
+    switch (direction) {
+        case RIGHT:
+            x += *delta * 90 * BARREL_SPEED;
+            start = 2;
+            end = 3;
+            break;
+        case LEFT:
+            x -= *delta * 90 * BARREL_SPEED;
+            start = 0;
+            end = 1;
+            break;
+        case UP:
+            y -= *delta * 90 * BARREL_SPEED;
+        case DOWN:
+            y += *delta * 90 * BARREL_SPEED;
+    }
+    simple_animation(1, start, end);
+}
 void OBJECT::draw(SDL_Surface *screen) {
     if (x == 0 && y == 0) return;
+    if (type == BARREL) barrel();
     DrawSurface(screen, sheet->sprite[curent_sprite], x, y);
     frameCounter += *delta * 200;
     if (frameCounter > 1000) frameCounter = 0;
 }
+
+class Barrel : public OBJECT {
+   public:
+    Barrel(double *delta, SPRITESHEET_T *sheet)
+        : OBJECT(BARREL, 0, delta, sheet) {
+        this->direction = RIGHT;
+    }
+};
+
 class Player : public OBJECT {
    private:
     OBJECT **objectList;
@@ -446,6 +487,11 @@ void createLevel_1(OBJECT **objectList, int max, Player &player) {
     // NEXT(OBJECT_TYPE) | place(x, y) each TILE_SIZE
     player.place(-10, -5.5);
     PLACE(BARREL, 0, -5);
+    int path_x[] = {0};
+    int path_y[] = {0};
+
+    objectList[LAST(BARREL)]->path.x[0] = 10;
+    // SET_PATH(LAST(BARREL), path_x, path_y);
 
     PLACE(PLATFORM_SHORT, -10, -7);
     PLACE(PLATFORM_MEDIUM, 6, -1);
@@ -655,6 +701,7 @@ extern "C"
     }
 
     OBJECT *objectList[MAX_OBJECTS];
+    Barrel *barrelList[MAX_BARRELS];
     int objectListMaxIndex = 0;
 
     for (int i = 0; i < 3; i++) {
@@ -675,8 +722,7 @@ extern "C"
     }
 
     for (int i = 0; i < 10; i++) {
-        objectList[objectListMaxIndex++] =
-            new OBJECT(BARREL, 0, &delta, &barrelSheet);
+        objectList[objectListMaxIndex++] = new Barrel(&delta, &barrelSheet);
     }
 
     for (int i = 0; i < 1; i++) {
@@ -743,6 +789,7 @@ extern "C"
                    charset);
 
         // rysowanie obiekt�w / drawing objects
+        if (GAME.playing) objectList[WIN_]->simple_animation(1, 0, 1);
         for (int i = 0; i < objectListMaxIndex; i++) {
             if (objectList[i] != NULL) objectList[i]->draw(screen);
         }

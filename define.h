@@ -98,5 +98,24 @@ enum BUILDLEVEL {
 };
 
 #define NEXT(obj) obj##__ + index.obj##_++
+#define LAST(obj) obj##__ + index.obj##_ - 1
 
 #define PLACE(obj, x, y) objectList[obj##__ + index.obj##_++]->place(x, y)
+
+#define MAX_BARRELS 10
+#define BARREL_SPEED 0.5
+
+#define PATH_LENGHT 20
+
+typedef struct {
+    int cur_x = 0;
+    int cur_y = 0;
+    int x[PATH_LENGHT] = {0};
+    int y[PATH_LENGHT] = {0};
+} PATH_T;
+
+#define SET_PATH(n, PATH_X, PATH_Y)           \
+    for (int i = 0; i < PATH_LENGHT; i++) {   \
+        objectList[n]->path.x[i] = PATH_X[i]; \
+        objectList[n]->path.y[i] = PATH_Y[i]; \
+    }
