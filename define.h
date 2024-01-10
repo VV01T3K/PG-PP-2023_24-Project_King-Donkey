@@ -34,9 +34,9 @@ _Pragma("once")
 #define JUMP_BARREL_HEIGHT 30
 
 // scores
-#define WIN_LEVEL_SCORE 300
-#define COIN_COLLECTED_SCORE 200
-#define OVER_BARREL_SCORE 100
+#define WIN_LEVEL_SCORE 100
+#define COIN_COLLECTED_SCORE 800
+#define OVER_BARREL_SCORE 300
 
     typedef struct {
     SDL_Surface *sprite[9];
@@ -121,6 +121,7 @@ enum BUILDLEVEL {
         objectList[i]->destroy();          \
     }                                      \
     for (i = 0; i < barrelMax; i++) {      \
+        barrelList[i]->reset();            \
         barrelList[i]->destroy();          \
     }                                      \
     struct {                               \

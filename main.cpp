@@ -734,7 +734,7 @@ void createLevel_3(OBJECT **objectList, int max, Player &player,
     objectList[MONKE_]->place(-2, 3.7);
 
     double path_x0[] = {6.5, 8.5, 11.7, 100};
-    double path_y0[] = {-3, -4, -8, 100};
+    double path_y0[] = {-3, -4, -7.5, 100};
 
     PLACE_BARREL(-2, 3, path_x0, path_y0, 1);
     PLACE_BARREL(-2, 3, path_x0, path_y0, 3);
