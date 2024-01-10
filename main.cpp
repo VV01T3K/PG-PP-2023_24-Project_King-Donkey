@@ -153,6 +153,7 @@ class OBJECT {
     void destroy() { x = y = 0; };
     void simple_animation(float speed, int start, int end, int cycle);
 };
+
 /**
  * The function performs a simple animation by updating the current sprite based
  * on the given speed, start and end values, and cycle flag.
@@ -194,6 +195,7 @@ void OBJECT::simple_animation(float speed, int start, int end, int cycle) {
         }
     }
 }
+
 /**
  * The function "place" is used to set the x and y coordinates of an object on
  * the screen based on given parameters, with some additional adjustments for
@@ -218,6 +220,7 @@ void OBJECT::place(float x, float y) {
     start_values.x = this->x;
     start_values.y = this->y;
 }
+
 /**
  * The reset function sets the object's position, current sprite, and animation
  * cycle to their initial values.
@@ -228,6 +231,7 @@ void OBJECT::reset() {
     curent_sprite = start_values.curent_sprite;
     anim_cycle = start_values.anim_cycle;
 }
+
 /**
  * The function "getBORDER" returns the border position of an object in a
  * specified direction.
@@ -253,6 +257,7 @@ double OBJECT::getBORDER(Direction side) {
             return 0;
     }
 }
+
 /**
  * The draw function checks if the object's position is at (0,0), and if not, it
  * draws the object's sprite on the screen and updates the frame counter.
@@ -302,6 +307,7 @@ class Barrel : public OBJECT {
         }
     };
 };
+
 /**
  * The function `nextFrame` updates the position and animation of a barrel
  * object in a game.
@@ -382,6 +388,7 @@ void Barrel::nextFrame(SDL_Surface *screen) {
     OBJECT::simple_animation(2, start, end, anim_cycle);
     OBJECT::draw(screen);
 }
+
 /**
  * The function "reset" resets various variables of a Barrel object.
  */
@@ -394,6 +401,7 @@ void Barrel::reset() {
     spawned = 0;
     jumped_over = 0;
 }
+
 class TextPopup : public OBJECT {
    public:
     SDL_Surface *charset;
@@ -432,6 +440,7 @@ class TextPopup : public OBJECT {
     }
     int malloced = 0;
 };
+
 /**
  * The function moves a text popup up the screen and destroys it when it reaches
  * a certain position.
@@ -451,6 +460,7 @@ void TextPopup::nextFrame(SDL_Surface *screen) {
     }
     draw(screen);
 }
+
 /**
  * The function draws a text popup on an SDL surface at the specified
  * coordinates.
@@ -521,6 +531,7 @@ class Player : public OBJECT {
     void reset();
     void popup(char *text, int integer);
 };
+
 /**
  * The function `popup` displays a popup message with the given text and integer
  * value.
@@ -542,6 +553,7 @@ void Player::popup(char *text, int integer) {
                                        text);
     if (popupListIndex >= MAX_POPUPS) popupListIndex = 0;
 }
+
 /**
  * The function resets the player's attributes to their starting values.
  */
@@ -555,6 +567,7 @@ void Player::reset() {
     moving = starting_values.moving;
     falling = starting_values.falling;
 }
+
 /**
  * The jump function allows the player to jump if certain conditions are met.
  *
@@ -568,6 +581,7 @@ void Player::jump() {
     jump_state = 1;
     gravity = max_gravity * -(JUMP_HEIGHT)*speed;
 }
+
 /**
  * The function updates the player's position and applies gravity if the game is
  * currently playing.
@@ -746,6 +760,7 @@ void Player::collision() {
     if (horizontalSTOP) x -= delta_x;
     if (verticalSTOP) y -= delta_y;
 }
+
 /**
  * The function "animate" determines the current sprite to display based on the
  * player's state and movement.
@@ -798,6 +813,7 @@ void Player::animate() {
             curent_sprite = curent_sprite == 5 ? 3 : 5;
     }
 }
+
 /**
  * The function moves the player in the specified direction based on their
  * current state and updates their position and animation.
@@ -845,6 +861,7 @@ void Player::move(Direction direction) {
         animate();
     }
 }
+
 /**
  * The function creates level 1 of a game by placing various objects such as the
  * player, coins, barrels, platforms, and ladders in specific positions.
@@ -894,6 +911,7 @@ void createLevel_1(OBJECT **objectList, int max, Player &player,
 
     objectList[WIN_]->place(-6.5, 4);
 }
+
 /**
  * The function creates level 2 of a game by placing various objects and the
  * player character in specific positions.
@@ -938,6 +956,7 @@ void createLevel_2(OBJECT **objectList, int max, Player &player,
 
     objectList[WIN_]->place(-9.5, 5.5);
 }
+
 /**
  * The function creates level 3 of a game by placing various objects and setting
  * their positions.
