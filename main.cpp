@@ -104,7 +104,6 @@ int load_image_into_surface(SDL_Surface **surface, const char *image_path,
 class OBJECT {
    public:
     SPRITESHEET_T *sheet;
-    GAME_T *GAME;
     int monke_dance = 0;
     int ready_throw = 0;
     double frameCounter = 0;
@@ -117,13 +116,8 @@ class OBJECT {
     START_VALUES_OBJECT_T start_values;
     Direction direction = RIGHT;
 
-    OBJECT(int type, int sprite_type, double *delta, SPRITESHEET_T *sheet,
-           GAME_T *GAME)
-        : type(type),
-          sheet(sheet),
-          delta(delta),
-          curent_sprite(sprite_type),
-          GAME(GAME) {
+    OBJECT(int type, int sprite_type, double *delta, SPRITESHEET_T *sheet)
+        : type(type), sheet(sheet), delta(delta), curent_sprite(sprite_type) {
         if (type == LADDER_TOP) curent_sprite = 3;
 
         start_values.curent_sprite = curent_sprite;
@@ -190,7 +184,7 @@ double OBJECT::getBORDER(Direction side) {
     }
 }
 void OBJECT::draw(SDL_Surface *screen) {
-    if ((x == 0 && y == 0) || GAME->menu) return;
+    if (x == 0 && y == 0) return;
     DrawSurface(screen, sheet->sprite[curent_sprite], x, y);
     frameCounter += *delta * 200;
     if (frameCounter > 1000) frameCounter = 0;
@@ -198,8 +192,8 @@ void OBJECT::draw(SDL_Surface *screen) {
 
 class Barrel : public OBJECT {
    public:
-    Barrel(double *delta, SPRITESHEET_T *sheet, OBJECT *monke, GAME_T *GAME)
-        : OBJECT(BARREL, 0, delta, sheet, GAME) {
+    Barrel(double *delta, SPRITESHEET_T *sheet, OBJECT *monke)
+        : OBJECT(BARREL, 0, delta, sheet) {
         this->monke = monke;
         this->direction = RIGHT;
     }
@@ -224,7 +218,7 @@ class Barrel : public OBJECT {
     };
 };
 void Barrel::nextFrame(SDL_Surface *screen) {
-    if ((x == 0 && y == 0) || GAME->menu) return;
+    if (x == 0 && y == 0) return;
     if (delay > 0) {
         delay -= *delta;
         return;
@@ -305,8 +299,8 @@ void Barrel::reset() {
 class TextPopup : public OBJECT {
    public:
     SDL_Surface *charset;
-    TextPopup(double *delta, SDL_Surface *charset, GAME_T *GAME)
-        : OBJECT(NOTHING, 0, delta, 0, GAME) {
+    TextPopup(double *delta, SDL_Surface *charset)
+        : OBJECT(NOTHING, 0, delta, 0) {
         this->charset = charset;
     }
     char *text;
@@ -326,7 +320,7 @@ class TextPopup : public OBJECT {
     int malloced = 0;
 };
 void TextPopup::nextFrame(SDL_Surface *screen) {
-    if ((x == 0 && y == 0) || GAME->menu) return;
+    if (x == 0 && y == 0) return;
     y -= *delta * 30 * POPUP_SPEED;
     if (y < orginal_y - 20) {
         if (malloced) free(text);
@@ -336,7 +330,7 @@ void TextPopup::nextFrame(SDL_Surface *screen) {
     draw(screen);
 }
 void TextPopup::draw(SDL_Surface *screen) {
-    if ((x == 0 && y == 0) || GAME->menu) return;
+    if (x == 0 && y == 0) return;
     DrawString(screen, x, y, text, charset);
 }
 
@@ -355,6 +349,7 @@ class Player : public OBJECT {
     double delta_x = 0;
     double delta_y = 0;
     START_VALUES_PLAYER_T starting_values;
+    GAME_T *GAME;
 
    public:
     int ladder_possible = 0;
@@ -365,11 +360,12 @@ class Player : public OBJECT {
     int moving = 0;
     int falling = 1;
     Player(double *delta, SPRITESHEET_T *sheet, OBJECT **objectList,
-           int objectListSize, Barrel **barrelList, int barrelListMaxIndex,
-           TextPopup **popupList, GAME_T *GAME)
-        : OBJECT(0, 0, delta, sheet, GAME),
+           int objectListSize, GAME_T *GAME, Barrel **barrelList,
+           int barrelListMaxIndex, TextPopup **popupList)
+        : OBJECT(0, 0, delta, sheet),
           objectList(objectList),
           objectListSize(objectListSize),
+          GAME(GAME),
           barrelList(barrelList),
           popupList(popupList),
           barrelListMaxIndex(barrelListMaxIndex) {
@@ -928,56 +924,54 @@ extern "C"
         }
     }
 
-    GAME_T GAME;
-
     OBJECT *objectList[MAX_OBJECTS];
     int objectListMaxIndex = 0;
 
     for (int i = 0; i < 3; i++) {
         for (int j = 0; j < 10; j++) {
             objectList[objectListMaxIndex++] =
-                new OBJECT(PLATFORM, i, &delta, &platformSheet, &GAME);
+                new OBJECT(PLATFORM, i, &delta, &platformSheet);
         }
     }
     for (int i = 0; i < 3; i++) {
         for (int j = 0; j < 10; j++) {
             objectList[objectListMaxIndex++] =
-                new OBJECT(LADDER, i, &delta, &ladderSheet, &GAME);
+                new OBJECT(LADDER, i, &delta, &ladderSheet);
         }
     }
     for (int i = 0; i < 10; i++) {
         objectList[objectListMaxIndex++] =
-            new OBJECT(LADDER_TOP, 0, &delta, &ladderSheet, &GAME);
+            new OBJECT(LADDER_TOP, 0, &delta, &ladderSheet);
     }
 
     for (int i = 0; i < 10; i++) {
         objectList[objectListMaxIndex++] =
-            new OBJECT(COIN, 0, &delta, &coinSheet, &GAME);
+            new OBJECT(COIN, 0, &delta, &coinSheet);
     }
 
     TextPopup *textPopupList[MAX_POPUPS];
     int textPopupListMaxIndex = 0;
 
     for (int i = 0; i < 10; i++) {
-        textPopupList[textPopupListMaxIndex++] =
-            new TextPopup(&delta, charset, &GAME);
+        textPopupList[textPopupListMaxIndex++] = new TextPopup(&delta, charset);
     }
 
-    objectList[objectListMaxIndex++] =
-        new OBJECT(WIN, 0, &delta, &winSheet, &GAME);
+    objectList[objectListMaxIndex++] = new OBJECT(WIN, 0, &delta, &winSheet);
 
     int monkey_index = objectListMaxIndex++;
-    objectList[monkey_index] = new OBJECT(MONKE, 0, &delta, &monkeSheet, &GAME);
+    objectList[monkey_index] = new OBJECT(MONKE, 0, &delta, &monkeSheet);
 
     Barrel *barrelList[MAX_BARRELS];
     int barrelListMaxIndex = 0;
     for (int i = 0; i < 10; i++) {
         barrelList[barrelListMaxIndex++] =
-            new Barrel(&delta, &barrelSheet, objectList[monkey_index], &GAME);
+            new Barrel(&delta, &barrelSheet, objectList[monkey_index]);
     }
 
-    Player player(&delta, &palyerSheet, objectList, objectListMaxIndex,
-                  barrelList, barrelListMaxIndex, textPopupList, &GAME);
+    GAME_T GAME;
+
+    Player player(&delta, &palyerSheet, objectList, objectListMaxIndex, &GAME,
+                  barrelList, barrelListMaxIndex, textPopupList);
     player.place(0, 0);
 
     createLevel_1(objectList, objectListMaxIndex, player, barrelList,
@@ -1008,7 +1002,7 @@ extern "C"
             frames = 0;
             fpsTimer -= 0.5;
         };
-        sprintf(text, "Zaimplementowane: A, B, C, E, F ");
+        sprintf(text, "Zaimplementowane: A, B, C, E ");
         DrawString(screen, start_x, start_y - 16, text, charset);
 
         sprintf(text,
@@ -1081,11 +1075,7 @@ extern "C"
                     } else if (event.key.keysym.sym == SDLK_3) {
                         GAME.level = 3;
                         build_level = 1;
-                    } else if (event.key.keysym.sym == SDLK_m) {
-                        GAME.menu = !GAME.menu;
-                        GAME.playing = !GAME.playing;
                     }
-
                     break;
                 case SDL_QUIT:
                     quit = 1;
