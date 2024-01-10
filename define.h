@@ -112,6 +112,7 @@ enum BUILDLEVEL {
 
 #define __BUILDLEVEL_PREPARE__             \
     int i = 0;                             \
+    objectList[WIN_]->curent_sprite = 0;   \
     objectList[MONKE_]->curent_sprite = 0; \
     objectList[MONKE_]->ready_throw = 0;   \
     objectList[MONKE_]->monke_dance = 0;   \
@@ -121,7 +122,6 @@ enum BUILDLEVEL {
     }                                      \
     for (i = 0; i < barrelMax; i++) {      \
         barrelList[i]->destroy();          \
-        barrelList[i]->reset();            \
     }                                      \
     struct {                               \
         int PLATFORM_SHORT_ = 0;           \

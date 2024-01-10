@@ -1002,7 +1002,7 @@ extern "C"
             frames = 0;
             fpsTimer -= 0.5;
         };
-        sprintf(text, "Zaimplementowane: A, B, C, E ");
+        sprintf(text, "Zaimplementowane: A, B, C, E, F");
         DrawString(screen, start_x, start_y - 16, text, charset);
 
         sprintf(text,
