@@ -276,6 +276,26 @@ void OBJECT::draw(SDL_Surface *screen) {
     if (frameCounter > 1000) frameCounter = 0;
 }
 
+/**
+ * The function determines if two objects intersect by comparing their borders.
+ *
+ * @param object1 The first object being checked for intersection.
+ * @param object2 The above code defines a function named "intersects" that
+ * takes two objects as parameters, object1 and object2. The function checks if
+ * object1 intersects with object2 by comparing their borders in each direction
+ * (UP, DOWN, LEFT, RIGHT). If there is an intersection, the function returns
+ *
+ * @return 1 if the two objects intersect, and 0 if they do not intersect.
+ */
+int intersects(OBJECT &object1, OBJECT &object2) {
+    if (object1.getBORDER(DOWN) > object2.getBORDER(UP) &&
+        object1.getBORDER(LEFT) < object2.getBORDER(RIGHT) &&
+        object1.getBORDER(RIGHT) > object2.getBORDER(LEFT) &&
+        object1.getBORDER(UP) < object2.getBORDER(DOWN))
+        return 1;
+    return 0;
+}
+
 class Barrel : public OBJECT {
    public:
     Barrel(double *delta, SPRITESHEET_T *sheet, OBJECT *monke)
@@ -619,8 +639,8 @@ void Player::nextFrame(SDL_Surface *screen) {
 }
 
 /**
- * The function checks for collisions between the player and various objects in
- * the game and handles the corresponding actions.
+ * The function checks for collisions between the player and various objects
+ * in the game and handles the corresponding actions.
  */
 void Player::collision() {
     int horizontalSTOP = 0, verticalSTOP = 0;
@@ -649,10 +669,7 @@ void Player::collision() {
         if (objectList[i]->type == NOTHING) continue;
         if (objectList[i]->x == 0 && objectList[i]->y == 0) continue;
         if (objectList[i]->type == PLATFORM) {
-            if (getBORDER(DOWN) > objectList[i]->getBORDER(UP) &&
-                getBORDER(LEFT) < objectList[i]->getBORDER(RIGHT) &&
-                getBORDER(RIGHT) > objectList[i]->getBORDER(LEFT) &&
-                getBORDER(UP) < objectList[i]->getBORDER(DOWN)) {
+            if (intersects(*this, *objectList[i])) {
                 y -= gravity_delta;
                 zatrzymantko = 1;
                 if (getBORDER(DOWN) < objectList[i]->getBORDER(UP)) {
@@ -665,10 +682,7 @@ void Player::collision() {
                     if (gravity < 0) gravity = 0;
                 }
             }
-            if (getBORDER(DOWN) > objectList[i]->getBORDER(UP) &&
-                getBORDER(LEFT) < objectList[i]->getBORDER(RIGHT) &&
-                getBORDER(RIGHT) > objectList[i]->getBORDER(LEFT) &&
-                getBORDER(UP) < objectList[i]->getBORDER(DOWN)) {
+            if (intersects(*this, *objectList[i])) {
                 horizontalSTOP = 1;
                 y += gravity_delta;
             }
@@ -691,10 +705,7 @@ void Player::collision() {
             }
         }
         if (objectList[i]->type == WIN) {
-            if (getBORDER(DOWN) > objectList[i]->getBORDER(UP) &&
-                getBORDER(LEFT) < objectList[i]->getBORDER(RIGHT) &&
-                getBORDER(RIGHT) > objectList[i]->getBORDER(LEFT) &&
-                getBORDER(UP) < objectList[i]->getBORDER(DOWN)) {
+            if (intersects(*this, *objectList[i])) {
                 if (GAME->playing) {
                     GAME->win += 1;
                     GAME->score += WIN_LEVEL_SCORE;
@@ -704,18 +715,12 @@ void Player::collision() {
             }
         }
         if (objectList[i]->type == MONKE) {
-            if (getBORDER(DOWN) > objectList[i]->getBORDER(UP) &&
-                getBORDER(LEFT) < objectList[i]->getBORDER(RIGHT) &&
-                getBORDER(RIGHT) > objectList[i]->getBORDER(LEFT) &&
-                getBORDER(UP) < objectList[i]->getBORDER(DOWN)) {
+            if (intersects(*this, *objectList[i])) {
                 UNALIVE = 1;
             }
         }
         if (objectList[i]->type == COIN) {
-            if (getBORDER(DOWN) > objectList[i]->getBORDER(UP) &&
-                getBORDER(LEFT) < objectList[i]->getBORDER(RIGHT) &&
-                getBORDER(RIGHT) > objectList[i]->getBORDER(LEFT) &&
-                getBORDER(UP) < objectList[i]->getBORDER(DOWN)) {
+            if (intersects(*this, *objectList[i])) {
                 objectList[i]->destroy();
                 GAME->score += COIN_COLLECTED_SCORE;
                 popup("", COIN_COLLECTED_SCORE);
