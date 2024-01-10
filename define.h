@@ -26,14 +26,22 @@ _Pragma("once")
 #define MAX_POPUPS 10
 #define MAX_POPUP_LENGHT 20
 
+#define POPUP_SPEED 1
+
 #define BARREL_SPEED 1
 #define PATH_LENGHT 20
 #define MONKE_DANCE_TIME 4
 #define JUMP_BARREL_HEIGHT 30
 
+// scores
+#define WIN_LEVEL_SCORE 300
+#define COIN_COLLECTED_SCORE 200
+#define OVER_BARREL_SCORE 100
+
     typedef struct {
     SDL_Surface *sprite[9];
 } SPRITESHEET_T;
+
 typedef struct {
     SDL_Surface *surfaces[MAX_SURFACES];
     SDL_Texture *textures[MAX_TEXTURES];
@@ -56,6 +64,7 @@ enum ObjectType {
     TEXT,
     NOTHING
 };
+
 enum PLATFORM_TYPE { PLATFORM_SHORT, PLATFORM_MEDIUM, PLATFORM_LONG };
 enum LADDER_TYPE { LADDER_SHORT, LADDER_MEDIUM, LADDER_LONG };
 

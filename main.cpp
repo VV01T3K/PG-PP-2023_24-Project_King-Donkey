@@ -305,13 +305,28 @@ class TextPopup : public OBJECT {
     }
     char *text;
     void nextFrame(SDL_Surface *screen);
-    void destroy() { x = y = 0; };
+    void destroy() {
+        orginal_y = 0;
+        x = y = 0;
+    };
     void draw(SDL_Surface *screen);
+    int orginal_y = 0;
+    void place(float x, float y, char *text) {
+        orginal_y = y;
+        this->text = text;
+        this->x = x;
+        this->y = y;
+    }
+    int malloced = 0;
 };
 void TextPopup::nextFrame(SDL_Surface *screen) {
     if (x == 0 && y == 0) return;
-    y -= *delta * 100;
-    if (y < 0) y = 0;
+    y -= *delta * 30 * POPUP_SPEED;
+    if (y < orginal_y - 20) {
+        if (malloced) free(text);
+        destroy();
+        return;
+    }
     draw(screen);
 }
 void TextPopup::draw(SDL_Surface *screen) {
@@ -323,6 +338,8 @@ class Player : public OBJECT {
    private:
     OBJECT **objectList;
     Barrel **barrelList;
+    TextPopup **popupList;
+    int popupListIndex = 0;
     int barrelListMaxIndex;
     int objectListSize;
     double speed = 1.5;
@@ -344,12 +361,13 @@ class Player : public OBJECT {
     int falling = 1;
     Player(double *delta, SPRITESHEET_T *sheet, OBJECT **objectList,
            int objectListSize, GAME_T *GAME, Barrel **barrelList,
-           int barrelListMaxIndex)
+           int barrelListMaxIndex, TextPopup **popupList)
         : OBJECT(0, 0, delta, sheet),
           objectList(objectList),
           objectListSize(objectListSize),
           GAME(GAME),
           barrelList(barrelList),
+          popupList(popupList),
           barrelListMaxIndex(barrelListMaxIndex) {
         this->gravity = this->max_gravity;
 
@@ -368,7 +386,18 @@ class Player : public OBJECT {
     void nextFrame(SDL_Surface *screen);
     void jump();
     void reset();
+    void popup(char *text, int integer);
 };
+void Player::popup(char *text, int integer) {
+    if (integer) {
+        text = (char *)malloc(sizeof(char) * 10);
+        sprintf(text, "%d", integer);
+        popupList[popupListIndex]->malloced = 1;
+    }
+    popupList[popupListIndex++]->place(getBORDER(LEFT), getBORDER(UP) - 10,
+                                       text);
+    if (popupListIndex >= MAX_POPUPS) popupListIndex = 0;
+}
 void Player::reset() {
     OBJECT::reset();
     ladder_possible = starting_values.ladder_possible;
@@ -486,7 +515,8 @@ void Player::collision() {
                 getBORDER(UP) < objectList[i]->getBORDER(DOWN)) {
                 if (GAME->playing) {
                     GAME->win += 1;
-                    GAME->score += 100;
+                    GAME->score += WIN_LEVEL_SCORE;
+                    popup("", WIN_LEVEL_SCORE);
                     GAME->playing = 0;
                 }
             }
@@ -505,7 +535,8 @@ void Player::collision() {
                 getBORDER(RIGHT) > objectList[i]->getBORDER(LEFT) &&
                 getBORDER(UP) < objectList[i]->getBORDER(DOWN)) {
                 objectList[i]->destroy();
-                GAME->score += 50;
+                GAME->score += COIN_COLLECTED_SCORE;
+                popup("", COIN_COLLECTED_SCORE);
             }
         }
     }
@@ -513,8 +544,8 @@ void Player::collision() {
         if (barrelList[i] == NULL) continue;
         if (barrelList[i]->type == NOTHING) continue;
         if (barrelList[i]->x == 0 && barrelList[i]->y == 0) continue;
-        if (getBORDER(DOWN) - (TILE_SIZE / 3) > barrelList[i]->getBORDER(UP) &&
-            getBORDER(LEFT) - (TILE_SIZE / 3) <
+        if (getBORDER(DOWN) + (TILE_SIZE / 3) > barrelList[i]->getBORDER(UP) &&
+            getBORDER(LEFT) + (TILE_SIZE / 3) <
                 barrelList[i]->getBORDER(RIGHT) &&
             getBORDER(RIGHT) - (TILE_SIZE / 3) >
                 barrelList[i]->getBORDER(LEFT) &&
@@ -528,9 +559,10 @@ void Player::collision() {
             if (getBORDER(DOWN) <
                 barrelList[i]->getBORDER(UP) + JUMP_BARREL_HEIGHT) {
                 if (barrelList[i]->jumped_over == 0 && dead_state == 0 &&
-                    jump_state == 1) {
-                    GAME->score += 10;
+                    jump_state == 1 && ladder_state == 0) {
+                    GAME->score += OVER_BARREL_SCORE;
                     barrelList[i]->jumped_over = 1;
+                    popup("", OVER_BARREL_SCORE);
                 }
             }
         }
@@ -539,7 +571,10 @@ void Player::collision() {
     if (zatrzymantko && delta_y > 0) y -= delta_y;
 
     // EVENTS
-    if (UNALIVE) dead_state = 1;
+    if (UNALIVE) {
+        if (dead_state == 0) popup("You Died", 0);
+        dead_state = 1;
+    }
     if (horizontalSTOP) x -= delta_x;
     if (verticalSTOP) y -= delta_y;
 }
@@ -916,18 +951,9 @@ extern "C"
 
     TextPopup *textPopupList[MAX_POPUPS];
     int textPopupListMaxIndex = 0;
-    char *textPopupListText[MAX_POPUPS];
-
-    for (int i = 0; i < MAX_POPUPS; i++) {
-        textPopupListText[i] = "TEXT";
-    }
-
-    printf("%s\n", textPopupListText[0]);
 
     for (int i = 0; i < 10; i++) {
         textPopupList[textPopupListMaxIndex++] = new TextPopup(&delta, charset);
-        textPopupList[textPopupListMaxIndex - 1]->text = textPopupListText[i];
-        textPopupList[textPopupListMaxIndex - 1]->place(0, 0);
     }
 
     objectList[objectListMaxIndex++] = new OBJECT(WIN, 0, &delta, &winSheet);
@@ -945,7 +971,7 @@ extern "C"
     GAME_T GAME;
 
     Player player(&delta, &palyerSheet, objectList, objectListMaxIndex, &GAME,
-                  barrelList, barrelListMaxIndex);
+                  barrelList, barrelListMaxIndex, textPopupList);
     player.place(0, 0);
 
     createLevel_1(objectList, objectListMaxIndex, player, barrelList,
@@ -1012,11 +1038,12 @@ extern "C"
         for (int i = 0; i < barrelListMaxIndex; i++) {
             if (barrelList[i] != NULL) barrelList[i]->nextFrame(screen);
         }
+
+        player.nextFrame(screen);
+
         for (int i = 0; i < textPopupListMaxIndex; i++) {
             if (textPopupList[i] != NULL) textPopupList[i]->nextFrame(screen);
         }
-
-        player.nextFrame(screen);
 
         SDL_UpdateTexture(scrtex, NULL, screen->pixels, screen->pitch);
         //		SDL_RenderClear(renderer);
