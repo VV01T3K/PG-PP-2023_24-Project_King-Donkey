@@ -34,9 +34,9 @@ _Pragma("once")
 #define JUMP_BARREL_HEIGHT 30
 
 // scores
-#define WIN_LEVEL_SCORE 300
-#define COIN_COLLECTED_SCORE 200
-#define OVER_BARREL_SCORE 100
+#define WIN_LEVEL_SCORE 1000
+#define COIN_COLLECTED_SCORE 800
+#define OVER_BARREL_SCORE 300
 
     typedef struct {
     SDL_Surface *sprite[9];
@@ -93,6 +93,7 @@ typedef struct {
     int lives = 3;
     int level = 1;
     int level_max = 3;
+    int menu = 0;
 } GAME_T;
 
 // BUILD_LEVEL
