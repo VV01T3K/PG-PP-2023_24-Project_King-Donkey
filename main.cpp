@@ -73,6 +73,13 @@ void DrawRectangle(SDL_Surface *screen, int x, int y, int l, int k,
         DrawLine(screen, x + 1, i, l - 2, 1, 0, fillColor);
 };
 
+/**
+ * The function frees SDL resources by freeing surfaces, textures, window,
+ * renderer, and quitting SDL.
+ *
+ * @param sdl_objects sdl_objects is a pointer to a struct that contains various
+ * SDL objects such as surfaces, textures, window, and renderer.
+ */
 void free_sdl_resources(SDL_OBJECTS_T *sdl_objects) {
     for (int i = 0; i < sdl_objects->surface_index; i++) {
         SDL_FreeSurface(sdl_objects->surfaces[i]);
@@ -85,6 +92,21 @@ void free_sdl_resources(SDL_OBJECTS_T *sdl_objects) {
     SDL_Quit();
 }
 
+/**
+ * The function loads an image from a specified path into an SDL surface and
+ * stores the surface in an array of surfaces.
+ *
+ * @param surface A pointer to a pointer to an SDL_Surface. This is used to
+ * store the loaded image surface.
+ * @param image_path A string representing the name of the image file to be
+ * loaded.
+ * @param sdl_obj sdl_obj is a pointer to a structure of type SDL_OBJECTS_T.
+ * This structure contains various SDL objects and resources that are used in
+ * the program.
+ *
+ * @return an integer value. If the image loading is successful, it returns 0.
+ * If there is an error in loading the image, it returns 1.
+ */
 int load_image_into_surface(SDL_Surface **surface, const char *image_path,
                             SDL_OBJECTS_T *sdl_obj) {
     char imagePath[256];
@@ -131,6 +153,25 @@ class OBJECT {
     void destroy() { x = y = 0; };
     void simple_animation(float speed, int start, int end, int cycle);
 };
+/**
+ * The function performs a simple animation by updating the current sprite based
+ * on the given speed, start and end values, and cycle flag.
+ *
+ * @param speed The speed parameter determines how fast the animation should
+ * play. It represents the number of frames per second (fps) at which the
+ * animation should be played. For example, if speed is set to 30, the animation
+ * will play at 30 frames per second.
+ * @param start The start parameter represents the index of the first sprite in
+ * the animation sequence.
+ * @param end The "end" parameter in the given code represents the index of the
+ * last sprite in the animation sequence.
+ * @param cycle The "cycle" parameter determines whether the animation should
+ * loop or not. If "cycle" is set to 1, the animation will loop from the "start"
+ * sprite to the "end" sprite and then start again from the "start" sprite. If
+ * "cycle" is set to 0
+ *
+ * @return In this code, the function is returning nothing (void).
+ */
 void OBJECT::simple_animation(float speed, int start, int end, int cycle) {
     if (type == MONKE) {
         if (monke_dance == 0) {
@@ -153,6 +194,20 @@ void OBJECT::simple_animation(float speed, int start, int end, int cycle) {
         }
     }
 }
+/**
+ * The function "place" is used to set the x and y coordinates of an object on
+ * the screen based on given parameters, with some additional adjustments for
+ * specific object types.
+ *
+ * @param x The x parameter represents the horizontal position of the object,
+ * relative to the center of the screen. It is multiplied by the size of each
+ * tile (TILE_SIZE) and added to half of the screen width (SCREEN_WIDTH / 2) to
+ * calculate the final x position of the object.
+ * @param y The "y" parameter in the "place" function represents the vertical
+ * position of the object on the screen. It is used to calculate the final
+ * y-coordinate of the object's position based on the screen height and the size
+ * of each tile.
+ */
 void OBJECT::place(float x, float y) {
     this->x = SCREEN_WIDTH / 2 + (x * TILE_SIZE);
     this->y = SCREEN_HEIGHT / 2 - (y * TILE_SIZE);
@@ -163,12 +218,27 @@ void OBJECT::place(float x, float y) {
     start_values.x = this->x;
     start_values.y = this->y;
 }
+/**
+ * The reset function sets the object's position, current sprite, and animation
+ * cycle to their initial values.
+ */
 void OBJECT::reset() {
     x = start_values.x;
     y = start_values.y;
     curent_sprite = start_values.curent_sprite;
     anim_cycle = start_values.anim_cycle;
 }
+/**
+ * The function "getBORDER" returns the border position of an object in a
+ * specified direction.
+ *
+ * @param side The "side" parameter is of type "Direction" and represents the
+ * side of the object for which we want to get the border value. The possible
+ * values for "side" are RIGHT, LEFT, UP, and DOWN.
+ *
+ * @return a double value, which represents the border position of the object in
+ * the specified direction.
+ */
 double OBJECT::getBORDER(Direction side) {
     switch (side) {
         case RIGHT:
@@ -183,6 +253,17 @@ double OBJECT::getBORDER(Direction side) {
             return 0;
     }
 }
+/**
+ * The draw function checks if the object's position is at (0,0), and if not, it
+ * draws the object's sprite on the screen and updates the frame counter.
+ *
+ * @param screen The "screen" parameter is a pointer to an SDL_Surface object,
+ * which represents the screen or window where the object will be drawn.
+ *
+ * @return If the conditions `x == 0` and `y == 0` are true, then nothing is
+ * being returned. The `return` statement will exit the function and no further
+ * code will be executed.
+ */
 void OBJECT::draw(SDL_Surface *screen) {
     if (x == 0 && y == 0) return;
     DrawSurface(screen, sheet->sprite[curent_sprite], x, y);
@@ -209,6 +290,10 @@ class Barrel : public OBJECT {
     int spawned = 0;
     Direction last_direction = direction;
     void reset();
+    /**
+     * The function "destroy" sets the variables x and y to 0, and initializes
+     * the arrays path_x and path_y with the value 100 for each element.
+     */
     void destroy() {
         x = y = 0;
         for (int i = 0; i < PATH_LENGHT; i++) {
@@ -217,6 +302,16 @@ class Barrel : public OBJECT {
         }
     };
 };
+/**
+ * The function `nextFrame` updates the position and animation of a barrel
+ * object in a game.
+ *
+ * @param screen The "screen" parameter is a pointer to an SDL_Surface object.
+ * It represents the screen surface where the barrel will be drawn.
+ *
+ * @return The function does not have a return type, so it does not return
+ * anything.
+ */
 void Barrel::nextFrame(SDL_Surface *screen) {
     if (x == 0 && y == 0) return;
     if (delay > 0) {
@@ -287,6 +382,9 @@ void Barrel::nextFrame(SDL_Surface *screen) {
     OBJECT::simple_animation(2, start, end, anim_cycle);
     OBJECT::draw(screen);
 }
+/**
+ * The function "reset" resets various variables of a Barrel object.
+ */
 void Barrel::reset() {
     OBJECT::reset();
     falling = 0;
@@ -305,12 +403,27 @@ class TextPopup : public OBJECT {
     }
     char *text;
     void nextFrame(SDL_Surface *screen);
+    /**
+     * The function "destroy" sets the values of orginal_y, x, and y to 0.
+     */
     void destroy() {
         orginal_y = 0;
         x = y = 0;
     };
     void draw(SDL_Surface *screen);
     int orginal_y = 0;
+    /**
+     * The function "place" takes in three parameters (x, y, and text) and
+     * assigns them to the corresponding member variables (x, y, and text) of
+     * the object.
+     *
+     * @param x The x-coordinate of the position where the text will be placed.
+     * @param y The y parameter is a float value representing the vertical
+     * position where the text will be placed.
+     * @param text The "text" parameter is a pointer to a character array, which
+     * represents the text that you want to place at the specified coordinates
+     * (x, y).
+     */
     void place(float x, float y, char *text) {
         orginal_y = y;
         this->text = text;
@@ -319,6 +432,15 @@ class TextPopup : public OBJECT {
     }
     int malloced = 0;
 };
+/**
+ * The function moves a text popup up the screen and destroys it when it reaches
+ * a certain position.
+ *
+ * @param screen The "screen" parameter is a pointer to an SDL_Surface object,
+ * which represents the screen or window where the text popup will be drawn.
+ *
+ * @return In this code snippet, the function is returning nothing (void).
+ */
 void TextPopup::nextFrame(SDL_Surface *screen) {
     if (x == 0 && y == 0) return;
     y -= *delta * 30 * POPUP_SPEED;
@@ -329,6 +451,17 @@ void TextPopup::nextFrame(SDL_Surface *screen) {
     }
     draw(screen);
 }
+/**
+ * The function draws a text popup on an SDL surface at the specified
+ * coordinates.
+ *
+ * @param screen The screen parameter is a pointer to an SDL_Surface object,
+ * which represents the screen or window where the text will be drawn.
+ *
+ * @return If the conditions `x == 0` and `y == 0` are true, then nothing is
+ * being returned. The `return` statement is used to exit the function early and
+ * return control to the calling function.
+ */
 void TextPopup::draw(SDL_Surface *screen) {
     if (x == 0 && y == 0) return;
     DrawString(screen, x, y, text, charset);
@@ -388,6 +521,17 @@ class Player : public OBJECT {
     void reset();
     void popup(char *text, int integer);
 };
+/**
+ * The function `popup` displays a popup message with the given text and integer
+ * value.
+ *
+ * @param text A pointer to a character array that represents the text to be
+ * displayed in the popup.
+ * @param integer The "integer" parameter is an integer value that is used to
+ * determine whether or not to display a popup with a numerical value. If the
+ * value of "integer" is non-zero, a popup with the value of "integer" will be
+ * displayed.
+ */
 void Player::popup(char *text, int integer) {
     if (integer) {
         text = (char *)malloc(sizeof(char) * 10);
@@ -398,6 +542,9 @@ void Player::popup(char *text, int integer) {
                                        text);
     if (popupListIndex >= MAX_POPUPS) popupListIndex = 0;
 }
+/**
+ * The function resets the player's attributes to their starting values.
+ */
 void Player::reset() {
     OBJECT::reset();
     ladder_possible = starting_values.ladder_possible;
@@ -408,12 +555,29 @@ void Player::reset() {
     moving = starting_values.moving;
     falling = starting_values.falling;
 }
+/**
+ * The jump function allows the player to jump if certain conditions are met.
+ *
+ * @return If any of the following conditions are true: jump_state is true,
+ * ladder_state is true, dead_state is true, falling is true, or GAME->playing
+ * is false, then the function will return and nothing will be executed.
+ */
 void Player::jump() {
     if (jump_state || ladder_state || dead_state || falling || !GAME->playing)
         return;
     jump_state = 1;
     gravity = max_gravity * -(JUMP_HEIGHT)*speed;
 }
+/**
+ * The function updates the player's position and applies gravity if the game is
+ * currently playing.
+ *
+ * @param screen The "screen" parameter is a pointer to an SDL_Surface object,
+ * which represents the screen or window where the game is being displayed.
+ *
+ * @return In this code, the function is returning void, which means it is not
+ * returning any value.
+ */
 void Player::nextFrame(SDL_Surface *screen) {
     if (GAME->playing == 0) {
         draw(screen);
@@ -440,6 +604,10 @@ void Player::nextFrame(SDL_Surface *screen) {
     delta_y = 0;
 }
 
+/**
+ * The function checks for collisions between the player and various objects in
+ * the game and handles the corresponding actions.
+ */
 void Player::collision() {
     int horizontalSTOP = 0, verticalSTOP = 0;
     int UNALIVE = 0;
@@ -578,6 +746,13 @@ void Player::collision() {
     if (horizontalSTOP) x -= delta_x;
     if (verticalSTOP) y -= delta_y;
 }
+/**
+ * The function "animate" determines the current sprite to display based on the
+ * player's state and movement.
+ *
+ * @return The function does not have a return type, so it does not return
+ * anything.
+ */
 void Player::animate() {
     if (dead_state) {
         curent_sprite = 8;
@@ -623,6 +798,16 @@ void Player::animate() {
             curent_sprite = curent_sprite == 5 ? 3 : 5;
     }
 }
+/**
+ * The function moves the player in the specified direction based on their
+ * current state and updates their position and animation.
+ *
+ * @param direction The "direction" parameter is an enum type called "Direction"
+ * which represents the direction in which the player should move. It can have
+ * the following values:
+ *
+ * @return Nothing is being returned in this function.
+ */
 void Player::move(Direction direction) {
     if (dead_state || !GAME->playing) return;
     double distance = 0;
@@ -660,6 +845,21 @@ void Player::move(Direction direction) {
         animate();
     }
 }
+/**
+ * The function creates level 1 of a game by placing various objects such as the
+ * player, coins, barrels, platforms, and ladders in specific positions.
+ *
+ * @param objectList objectList is a pointer to an array of OBJECT pointers.
+ * Each OBJECT pointer represents an object in the game level.
+ * @param max The parameter "max" represents the maximum number of objects that
+ * can be stored in the objectList array.
+ * @param player The "player" parameter is a reference to an object of the
+ * "Player" class. It represents the player character in the game.
+ * @param barrelList The parameter `barrelList` is a pointer to an array of
+ * `Barrel` objects.
+ * @param barrelMax The parameter "barrelMax" represents the maximum number of
+ * barrels that can be created in the level.
+ */
 void createLevel_1(OBJECT **objectList, int max, Player &player,
                    Barrel **barrelList, int barrelMax) {
     __BUILDLEVEL_PREPARE__
@@ -694,6 +894,21 @@ void createLevel_1(OBJECT **objectList, int max, Player &player,
 
     objectList[WIN_]->place(-6.5, 4);
 }
+/**
+ * The function creates level 2 of a game by placing various objects and the
+ * player character in specific positions.
+ *
+ * @param objectList objectList is a pointer to an array of OBJECT pointers.
+ * Each OBJECT represents an object in the game level.
+ * @param max The parameter "max" represents the maximum number of objects that
+ * can be stored in the objectList array.
+ * @param player The "player" parameter is a reference to an object of type
+ * "Player". It represents the player character in the game.
+ * @param barrelList The parameter "barrelList" is a pointer to an array of
+ * pointers to Barrel objects.
+ * @param barrelMax The parameter "barrelMax" represents the maximum number of
+ * barrels that can be created in the level.
+ */
 void createLevel_2(OBJECT **objectList, int max, Player &player,
                    Barrel **barrelList, int barrelMax) {
     __BUILDLEVEL_PREPARE__
@@ -723,6 +938,21 @@ void createLevel_2(OBJECT **objectList, int max, Player &player,
 
     objectList[WIN_]->place(-9.5, 5.5);
 }
+/**
+ * The function creates level 3 of a game by placing various objects and setting
+ * their positions.
+ *
+ * @param objectList objectList is a pointer to an array of OBJECT pointers. It
+ * is used to store the objects in the level.
+ * @param max The parameter "max" represents the maximum number of objects that
+ * can be stored in the objectList array.
+ * @param player The "player" parameter is a reference to an object of type
+ * "Player". It represents the player character in the game.
+ * @param barrelList The parameter `barrelList` is a pointer to an array of
+ * pointers to `Barrel` objects.
+ * @param barrelMax The parameter "barrelMax" represents the maximum number of
+ * barrels that can be placed in the level.
+ */
 void createLevel_3(OBJECT **objectList, int max, Player &player,
                    Barrel **barrelList, int barrelMax) {
     __BUILDLEVEL_PREPARE__
@@ -866,6 +1096,10 @@ extern "C"
     quit = 0;
     worldTime = 0;
 
+    /* The code below is loading images into surfaces for different sprite
+    sheets. It is using a loop to load multiple images for each sprite sheet.
+    The images are loaded from different directories based on the value of the
+    loop variable. If the loading of any image fails, the function returns 1. */
     SPRITESHEET_T palyerSheet;
     for (int i = 0; i < 9; i++) {
         sprintf(text, "Player/%d", i);
@@ -924,6 +1158,8 @@ extern "C"
         }
     }
 
+    /* The code below is creating and initializing various objects and lists for
+     * a game. */
     OBJECT *objectList[MAX_OBJECTS];
     int objectListMaxIndex = 0;
 
@@ -1028,7 +1264,7 @@ extern "C"
         DrawString(screen, screen->w / 2 - strlen(text) * 8 / 2, 26, text,
                    charset);
 
-        // rysowanie obiekt�w / drawing objects
+        /* The code below is rendering a game scene. */
         if (!GAME.playing) objectList[WIN_]->simple_animation(1, 0, 1, 0);
         objectList[MONKE_]->simple_animation(1, 0, 3, 1);
 
@@ -1100,6 +1336,11 @@ extern "C"
             }
         }
 
+        /* The code below is checking the state of the keyboard using
+        SDL_GetKeyboardState() function. It then checks if certain keys (right
+        arrow, left arrow, D, A, up arrow, W, down arrow, S, and space) are
+        pressed. Depending on which keys are pressed, it sets the player's
+        ladder state and calls the move() or jump() functions accordingly. */
         player.moving = 0;
         keystate = SDL_GetKeyboardState(NULL);
         if (keystate[SDL_SCANCODE_RIGHT] || keystate[SDL_SCANCODE_D]) {
