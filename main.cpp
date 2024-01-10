@@ -397,7 +397,6 @@ void Player::popup(char *text, int integer) {
     popupList[popupListIndex++]->place(getBORDER(LEFT), getBORDER(UP) - 10,
                                        text);
     if (popupListIndex >= MAX_POPUPS) popupListIndex = 0;
-    // cos
 }
 void Player::reset() {
     OBJECT::reset();
