@@ -198,6 +198,7 @@ class Barrel : public OBJECT {
         this->direction = RIGHT;
     }
     OBJECT *monke;
+    int jumped_over = 0;
     void nextFrame(SDL_Surface *screen);
     int start = 0, end = 0;
     double path_x[PATH_LENGHT] = {100};
@@ -293,6 +294,7 @@ void Barrel::reset() {
     curr_dest = 0;
     last_direction = direction;
     spawned = 0;
+    jumped_over = 0;
 }
 
 class Player : public OBJECT {
@@ -475,6 +477,15 @@ void Player::collision() {
                 UNALIVE = 1;
             }
         }
+        if (objectList[i]->type == COIN) {
+            if (getBORDER(DOWN) > objectList[i]->getBORDER(UP) &&
+                getBORDER(LEFT) < objectList[i]->getBORDER(RIGHT) &&
+                getBORDER(RIGHT) > objectList[i]->getBORDER(LEFT) &&
+                getBORDER(UP) < objectList[i]->getBORDER(DOWN)) {
+                objectList[i]->destroy();
+                GAME->score += 50;
+            }
+        }
     }
     for (int i = 0; i < barrelListMaxIndex; i++) {
         if (barrelList[i] == NULL) continue;
@@ -487,6 +498,19 @@ void Player::collision() {
                 barrelList[i]->getBORDER(LEFT) &&
             getBORDER(UP) - (TILE_SIZE / 3) < barrelList[i]->getBORDER(DOWN)) {
             UNALIVE = 1;
+        }
+        if (getBORDER(LEFT) < barrelList[i]->getBORDER(RIGHT) &&
+            getBORDER(RIGHT) > barrelList[i]->getBORDER(LEFT) &&
+            getBORDER(DOWN) < barrelList[i]->getBORDER(UP) &&
+            getBORDER(UP) < barrelList[i]->getBORDER(DOWN)) {
+            if (getBORDER(DOWN) <
+                barrelList[i]->getBORDER(UP) + JUMP_BARREL_HEIGHT) {
+                if (barrelList[i]->jumped_over == 0 && dead_state == 0 &&
+                    jump_state == 1) {
+                    GAME->score += 10;
+                    barrelList[i]->jumped_over = 1;
+                }
+            }
         }
     }
 
@@ -586,6 +610,8 @@ void createLevel_1(OBJECT **objectList, int max, Player &player,
     // MAX 10 objects of the same type
     // NEXT(OBJECT_TYPE) | place(x, y) each TILE_SIZE
     player.place(-9, -5.5);
+
+    PLACE(COIN, 0, 0);
 
     objectList[MONKE_]->place(6, 4.7);
     double path_x[] = {8.5, 1.5, -7.5, -10.5, -10.5, 100};
@@ -832,6 +858,14 @@ extern "C"
             return 1;
         }
     }
+    SPRITESHEET_T coinSheet;
+    for (int i = 0; i < 1; i++) {
+        sprintf(text, "Coin/%d", i);
+        if (load_image_into_surface(&(coinSheet.sprite[i]), text, &sdl_obj) !=
+            0) {
+            return 1;
+        }
+    }
 
     OBJECT *objectList[MAX_OBJECTS];
     int objectListMaxIndex = 0;
@@ -851,6 +885,11 @@ extern "C"
     for (int i = 0; i < 10; i++) {
         objectList[objectListMaxIndex++] =
             new OBJECT(LADDER_TOP, 0, &delta, &ladderSheet);
+    }
+
+    for (int i = 0; i < 10; i++) {
+        objectList[objectListMaxIndex++] =
+            new OBJECT(COIN, 0, &delta, &coinSheet);
     }
 
     objectList[objectListMaxIndex++] = new OBJECT(WIN, 0, &delta, &winSheet);

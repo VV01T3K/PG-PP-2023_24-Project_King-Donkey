@@ -27,6 +27,7 @@ _Pragma("once")
 #define BARREL_SPEED 1
 #define PATH_LENGHT 20
 #define MONKE_DANCE_TIME 4
+#define JUMP_BARREL_HEIGHT 30
 
     typedef struct {
     SDL_Surface *sprite[9];
@@ -49,6 +50,7 @@ enum ObjectType {
     BARREL,
     WIN,
     MONKE,
+    COIN,
     NOTHING
 };
 enum PLATFORM_TYPE { PLATFORM_SHORT, PLATFORM_MEDIUM, PLATFORM_LONG };
@@ -91,8 +93,9 @@ enum BUILDLEVEL {
     LADDER_MEDIUM__ = 30,
     LADDER_LONG__ = 50,
     LADDER_TOP__ = 60,
-    WIN_ = 70,
-    MONKE_ = 71,
+    COIN__ = 70,
+    WIN_ = 80,
+    MONKE_ = 81,
 };
 
 #define __BUILDLEVEL_PREPARE__             \
@@ -117,6 +120,7 @@ enum BUILDLEVEL {
         int LADDER_LONG_ = 0;              \
         int LADDER_TOP_ = 0;               \
         int BARREL_ = 0;                   \
+        int COIN_ = 0;                     \
     } index;
 
 #define NEXT(obj) obj##__ + index.obj##_++
