@@ -110,6 +110,9 @@ enum BUILDLEVEL {
     MONKE_ = 81,
 };
 
+// The code block initializes several variables
+// and resets the state of various
+// objects and variables.
 #define __BUILDLEVEL_PREPARE__             \
     int i = 0;                             \
     objectList[WIN_]->curent_sprite = 0;   \
@@ -142,6 +145,12 @@ enum BUILDLEVEL {
 
 #define PLACE(obj, x, y) objectList[obj##__ + index.obj##_++]->place(x, y)
 
+// The `#define PLACE_BARREL(x, y, PATH_XX, PATH_YY, DELAY)` macro is used to
+// place a barrel object in the game. It takes in the x and y coordinates of the
+// barrel's initial position, an array `PATH_XX` representing the x-coordinates
+// of the barrel's path, an array `PATH_YY` representing the y-coordinates of
+// the barrel's path, and a `DELAY` value representing the delay before the
+// barrel starts moving.
 #define PLACE_BARREL(x, y, PATH_XX, PATH_YY, DELAY)        \
     barrelList[index.BARREL_++]->place(x, y);              \
     barrelList[index.BARREL_ - 1]->delay = DELAY;          \
