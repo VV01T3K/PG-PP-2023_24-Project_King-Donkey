@@ -23,6 +23,8 @@ _Pragma("once")
 #define MAX_TEXTURES 5
 #define MAX_OBJECTS 200
 #define MAX_BARRELS 10
+#define MAX_POPUPS 10
+#define MAX_POPUP_LENGHT 20
 
 #define BARREL_SPEED 1
 #define PATH_LENGHT 20
@@ -51,6 +53,7 @@ enum ObjectType {
     WIN,
     MONKE,
     COIN,
+    TEXT,
     NOTHING
 };
 enum PLATFORM_TYPE { PLATFORM_SHORT, PLATFORM_MEDIUM, PLATFORM_LONG };
@@ -121,6 +124,7 @@ enum BUILDLEVEL {
         int LADDER_TOP_ = 0;               \
         int BARREL_ = 0;                   \
         int COIN_ = 0;                     \
+        int TEXT_ = 0;                     \
     } index;
 
 #define NEXT(obj) obj##__ + index.obj##_++

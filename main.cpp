@@ -296,6 +296,28 @@ void Barrel::reset() {
     spawned = 0;
     jumped_over = 0;
 }
+class TextPopup : public OBJECT {
+   public:
+    SDL_Surface *charset;
+    TextPopup(double *delta, SDL_Surface *charset)
+        : OBJECT(NOTHING, 0, delta, 0) {
+        this->charset = charset;
+    }
+    char *text;
+    void nextFrame(SDL_Surface *screen);
+    void destroy() { x = y = 0; };
+    void draw(SDL_Surface *screen);
+};
+void TextPopup::nextFrame(SDL_Surface *screen) {
+    if (x == 0 && y == 0) return;
+    y -= *delta * 100;
+    if (y < 0) y = 0;
+    draw(screen);
+}
+void TextPopup::draw(SDL_Surface *screen) {
+    if (x == 0 && y == 0) return;
+    DrawString(screen, x, y, text, charset);
+}
 
 class Player : public OBJECT {
    private:
@@ -892,6 +914,22 @@ extern "C"
             new OBJECT(COIN, 0, &delta, &coinSheet);
     }
 
+    TextPopup *textPopupList[MAX_POPUPS];
+    int textPopupListMaxIndex = 0;
+    char *textPopupListText[MAX_POPUPS];
+
+    for (int i = 0; i < MAX_POPUPS; i++) {
+        textPopupListText[i] = "TEXT";
+    }
+
+    printf("%s\n", textPopupListText[0]);
+
+    for (int i = 0; i < 10; i++) {
+        textPopupList[textPopupListMaxIndex++] = new TextPopup(&delta, charset);
+        textPopupList[textPopupListMaxIndex - 1]->text = textPopupListText[i];
+        textPopupList[textPopupListMaxIndex - 1]->place(0, 0);
+    }
+
     objectList[objectListMaxIndex++] = new OBJECT(WIN, 0, &delta, &winSheet);
 
     int monkey_index = objectListMaxIndex++;
@@ -938,7 +976,7 @@ extern "C"
             frames = 0;
             fpsTimer -= 0.5;
         };
-        sprintf(text, "Zaimplementowane: -A, B ");
+        sprintf(text, "Zaimplementowane: A, B, C, E ");
         DrawString(screen, start_x, start_y - 16, text, charset);
 
         sprintf(text,
@@ -973,6 +1011,9 @@ extern "C"
         }
         for (int i = 0; i < barrelListMaxIndex; i++) {
             if (barrelList[i] != NULL) barrelList[i]->nextFrame(screen);
+        }
+        for (int i = 0; i < textPopupListMaxIndex; i++) {
+            if (textPopupList[i] != NULL) textPopupList[i]->nextFrame(screen);
         }
 
         player.nextFrame(screen);
