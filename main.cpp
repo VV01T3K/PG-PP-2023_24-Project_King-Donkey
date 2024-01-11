@@ -774,6 +774,8 @@ void Player::collision() {
         if (GAME->lives < 0) GAME->lives = 0;
         dead_state = 1;
         GAME->score -= DEATH_PENALTY;
+        if (GAME->score < 0) GAME->score = 0;
+        GAME->lose += 1;
     }
     if (horizontalSTOP) x -= delta_x;
     if (verticalSTOP) y -= delta_y;
@@ -1285,7 +1287,10 @@ extern "C"
         delta = (t2 - t1) * 0.001;
         t1 = t2;
 
-        if (GAME.playing) worldTime += delta;
+        if (GAME.playing && !player.dead_state) {
+            worldTime += delta;
+            GAME.levelTime += delta;
+        }
 
         SDL_FillRect(screen, NULL, granatowy);
 
@@ -1302,8 +1307,10 @@ extern "C"
         DrawString(screen, start_x, start_y - 16, text, charset);
 
         sprintf(text,
-                "Interfejs gry: WIN:%d LOSE:%d SCORE:%d LIVES:%d LEVEL:%d",
-                GAME.win, GAME.lose, GAME.score, GAME.lives, GAME.level);
+                "Interfejs gry: WIN:%d LOSE:%d SCORE:%d LIVES:%d LEVEL:%d  "
+                "TIME ON LEVEL:%.1lfs",
+                GAME.win, GAME.lose, GAME.score, GAME.lives, GAME.level,
+                GAME.levelTime);
         DrawString(screen, start_x + 8, SCREEN_HEIGHT - 32, text, charset);
 
         // tekst informacyjny / info text
@@ -1315,7 +1322,8 @@ extern "C"
         sprintf(text,
                 "Wojciech Siwiec nr 197815, czas trwania = %.1lfs%s"
                 " | %.0lf/fps ",
-                worldTime, (GAME.playing ? "" : " STOPED"), fps);
+                worldTime,
+                ((GAME.playing && !player.dead_state) ? "" : " STOPPED"), fps);
         DrawString(screen, screen->w / 2 - strlen(text) * 8 / 2, 10, text,
                    charset);
         //	      "Esc - exit, \030 - faster, \031 - slower"
@@ -1384,6 +1392,7 @@ extern "C"
         };
         if (build_level) {
             GAME.playing = 1;
+            GAME.levelTime = 0;
             switch (GAME.level) {
                 case 1:
                     createLevel_1(objectList, objectListMaxIndex, player,

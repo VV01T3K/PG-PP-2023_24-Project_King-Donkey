@@ -93,6 +93,7 @@ typedef struct {
     int lives = 3;
     int level = 1;
     int level_max = 3;
+    double levelTime = 0;
 } GAME_T;
 
 // BUILD_LEVEL
