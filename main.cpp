@@ -474,7 +474,11 @@ void TextPopup::nextFrame(SDL_Surface *screen) {
     if (x == 0 && y == 0) return;
     y -= *delta * 30 * POPUP_SPEED;
     if (y < orginal_y - 20) {
-        if (malloced) free(text);
+        if (malloced) {
+            free(text);
+            text = NULL;
+            malloced = 0;
+        }
         destroy();
         return;
     }
@@ -647,6 +651,7 @@ void Player::collision() {
     int UNALIVE = 0;
     falling = 1;
     int zatrzymantko = 0;
+    int platform_collision = 0;
     ladder_top = 0;
     // check for collision with screen borders
     if (getBORDER(LEFT) < start_x) horizontalSTOP = 1;
@@ -670,6 +675,7 @@ void Player::collision() {
         if (objectList[i]->x == 0 && objectList[i]->y == 0) continue;
         if (objectList[i]->type == PLATFORM) {
             if (intersects(*this, *objectList[i])) {
+                platform_collision = 1;
                 y -= gravity_delta;
                 zatrzymantko = 1;
                 if (getBORDER(DOWN) < objectList[i]->getBORDER(UP)) {
@@ -743,10 +749,14 @@ void Player::collision() {
             getBORDER(RIGHT) > barrelList[i]->getBORDER(LEFT) &&
             getBORDER(DOWN) < barrelList[i]->getBORDER(UP) &&
             getBORDER(UP) < barrelList[i]->getBORDER(DOWN)) {
-            if (getBORDER(DOWN) <
-                barrelList[i]->getBORDER(UP) + JUMP_BARREL_HEIGHT) {
+            if (getBORDER(UP) <
+                    barrelList[i]->getBORDER(UP) - (TILE_SIZE * 5) ||
+                (gravity_delta > 0 &&
+                 getBORDER(UP) <
+                     barrelList[i]->getBORDER(UP) - (TILE_SIZE * 1))) {
                 if (barrelList[i]->jumped_over == 0 && dead_state == 0 &&
-                    jump_state == 1 && ladder_state == 0) {
+                    platform_collision == 0 && ladder_state == 0 &&
+                    jump_state == 1) {
                     GAME->score += OVER_BARREL_SCORE;
                     barrelList[i]->jumped_over = 1;
                     popup("", OVER_BARREL_SCORE);
@@ -758,9 +768,12 @@ void Player::collision() {
     if (zatrzymantko && delta_y > 0) y -= delta_y;
 
     // EVENTS
-    if (UNALIVE) {
-        if (dead_state == 0) popup("You Died", 0);
+    if (UNALIVE && dead_state == 0) {
+        GAME->lives -= 1;
+        popup("You Died", 0);
+        if (GAME->lives < 0) GAME->lives = 0;
         dead_state = 1;
+        GAME->score -= DEATH_PENALTY;
     }
     if (horizontalSTOP) x -= delta_x;
     if (verticalSTOP) y -= delta_y;
@@ -890,15 +903,15 @@ void createLevel_1(OBJECT **objectList, int max, Player &player,
     // NEXT(OBJECT_TYPE) | place(x, y) each TILE_SIZE
     player.place(-9, -5.5);
 
-    PLACE(COIN, 0, 0);
+    PLACE(COIN, 5, 1);
 
     objectList[MONKE_]->place(6, 4.7);
     double path_x[] = {8.5, 1.5, -7.5, -10.5, -10.5, 100};
     double path_y[] = {0, -5, -6, -7, -7.5, 100};
-    PLACE_BARREL(6, 4, path_x, path_y, 1);
-    PLACE_BARREL(6, 4, path_x, path_y, 3);
-    PLACE_BARREL(6, 4, path_x, path_y, 5);
-    PLACE_BARREL(6, 4, path_x, path_y, 7);
+    PLACE_BARREL(6, 4, path_x, path_y, 0);
+    PLACE_BARREL(6, 4, path_x, path_y, 2);
+    PLACE_BARREL(6, 4, path_x, path_y, 4);
+    PLACE_BARREL(6, 4, path_x, path_y, 6);
 
     PLACE(PLATFORM_SHORT, -8, -7);
     PLACE(PLATFORM_MEDIUM, 6, -1);
@@ -938,28 +951,47 @@ void createLevel_2(OBJECT **objectList, int max, Player &player,
 
     // MAX 10 objects of the same type
     // NEXT(OBJECT_TYPE) | place(x, y) each TILE_SIZE
-    player.place(10, -5.5);
+    player.place(0, -4.5);
 
-    PLACE(PLATFORM_SHORT, 10, -7);
-    PLACE(PLATFORM_SHORT, 2, -7);
-    PLACE(PLATFORM_SHORT, -6, -7);
-    PLACE(LADDER_MEDIUM, -12, -2);
-    PLACE(LADDER_TOP, -12, -2);
-    PLACE(PLATFORM_SHORT, -10, -2);
+    objectList[MONKE_]->place(3, 4.7);
+    double path_x0[] = {8.5, -10.5, 100};
+    double path_y0[] = {-1, -7.5, 100};
+    double path_x1[] = {8.5, 10.5, 100};
+    PLACE_BARREL(3, 4, path_x0, path_y0, 0);
+    PLACE_BARREL(3, 4, path_x0, path_y0, 1);
+    PLACE_BARREL(3, 4, path_x0, path_y0, 2);
+    PLACE_BARREL(3, 4, path_x0, path_y0, 3);
+    PLACE_BARREL(3, 4, path_x0, path_y0, 4);
+    PLACE_BARREL(3, 4, path_x0, path_y0, 5);
+    PLACE_BARREL(3, 4, path_x1, path_y0, 6);
 
-    PLACE(PLATFORM_LONG, 2, 1);
-    PLACE(LADDER_SHORT, -4, 1);
-    PLACE(LADDER_TOP, -4, 1);
-    PLACE(LADDER_SHORT, -1, 1);
-    PLACE(LADDER_TOP, -1, 1);
-    PLACE(LADDER_SHORT, 2, 1);
-    PLACE(LADDER_TOP, 2, 1);
+    objectList[WIN_]->place(-3, 4);
+    PLACE(COIN, 6, 4);
+    PLACE(COIN, 0, 4.3);
+    PLACE(COIN, .5, 3.7);
+    PLACE(COIN, 0, 3.7);
+    PLACE(COIN, -.5, 3.7);
 
-    PLACE(PLATFORM_MEDIUM, -2, 4);
+    PLACE(COIN, 10, -3);
+    PLACE(COIN, -10, -3);
 
-    PLACE(PLATFORM_SHORT, 10, 4);
+    PLACE(PLATFORM_LONG, 0, 3);
+    PLACE(LADDER_SHORT, -7, 3);
+    PLACE(LADDER_TOP, -7, 3);
+    PLACE(LADDER_SHORT, 7, 3);
+    PLACE(LADDER_TOP, 7, 3);
 
-    objectList[WIN_]->place(-9.5, 5.5);
+    PLACE(PLATFORM_SHORT, 0, -2);
+
+    PLACE(PLATFORM_MEDIUM, -6, -2);
+    PLACE(LADDER_MEDIUM, -3, -2);
+    PLACE(LADDER_TOP, -3, -2);
+
+    PLACE(PLATFORM_MEDIUM, 6, -2);
+    PLACE(LADDER_MEDIUM, 3, -2);
+    PLACE(LADDER_TOP, 3, -2);
+
+    PLACE(PLATFORM_LONG, 0, -6);
 }
 
 /**
@@ -990,17 +1022,19 @@ void createLevel_3(OBJECT **objectList, int max, Player &player,
     double path_x0[] = {6.5, 8.5, 11.7, 100};
     double path_y0[] = {-3, -4, -7.5, 100};
 
-    PLACE_BARREL(-2, 3, path_x0, path_y0, 1);
-    PLACE_BARREL(-2, 3, path_x0, path_y0, 3);
+    PLACE_BARREL(-2, 3, path_x0, path_y0, 4);
+    PLACE_BARREL(-2, 3, path_x0, path_y0, 6);
 
     double path_x1[] = {-10.5, 5, 3, 2, 100};
     double path_y1[] = {0, -3, -4, -7.5, 100};
 
+    PLACE_BARREL(-2, 3, path_x1, path_y1, 0);
+    PLACE_BARREL(-2, 3, path_x1, path_y1, 2);
     PLACE_BARREL(-2, 3, path_x1, path_y1, 5);
-    PLACE_BARREL(-2, 3, path_x1, path_y1, 7);
 
     PLACE(PLATFORM_SHORT, -2, 5);
 
+    PLACE(COIN, -9, -5);
     PLACE(PLATFORM_SHORT, 6, -4);
 
     PLACE(PLATFORM_MEDIUM, 7, -5);
@@ -1021,11 +1055,13 @@ void createLevel_3(OBJECT **objectList, int max, Player &player,
     PLACE(PLATFORM_MEDIUM, -6, 2);
     PLACE(PLATFORM_MEDIUM, 2, 2);
 
+    PLACE(COIN, -12, 6);
     PLACE(LADDER_MEDIUM, -12, 4);
     PLACE(LADDER_TOP, -12, 4);
 
     PLACE(PLATFORM_SHORT, 10, 1);
 
+    PLACE(COIN, 12, 5);
     objectList[WIN_]->place(10.5, 2);
 }
 
@@ -1293,10 +1329,14 @@ extern "C"
         objectList[MONKE_]->simple_animation(1, 0, 3, 1);
 
         for (int i = 0; i < objectListMaxIndex; i++) {
-            if (objectList[i] != NULL) objectList[i]->draw(screen);
+            if (objectList[i] != NULL && objectList[i]->type != LADDER_TOP)
+                objectList[i]->draw(screen);
         }
         for (int i = 0; i < barrelListMaxIndex; i++) {
             if (barrelList[i] != NULL) barrelList[i]->nextFrame(screen);
+        }
+        for (int i = 0; i < objectListMaxIndex; i++) {
+            if (objectList[i]->type == LADDER_TOP) objectList[i]->draw(screen);
         }
 
         player.nextFrame(screen);
@@ -1397,7 +1437,7 @@ extern "C"
         frames++;
 
         // // Sztuczne opóźnienie
-        // for (int i = 0; i < 1000; i++) printf("  \b\b");
+        // for (int i = 0; i < 500; i++) printf("  \b\b");
 
         player.animate();
     };

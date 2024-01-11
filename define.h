@@ -31,12 +31,12 @@ _Pragma("once")
 #define BARREL_SPEED 1
 #define PATH_LENGHT 20
 #define MONKE_DANCE_TIME 4
-#define JUMP_BARREL_HEIGHT 30
 
 // scores
-#define WIN_LEVEL_SCORE 100
+#define WIN_LEVEL_SCORE 1000
 #define COIN_COLLECTED_SCORE 800
 #define OVER_BARREL_SCORE 300
+#define DEATH_PENALTY 500
 
     typedef struct {
     SDL_Surface *sprite[9];
