@@ -4,9 +4,6 @@ _Pragma("once")
 #define SCREEN_WIDTH 640
 #define SCREEN_HEIGHT 480
 
-#define SCREEN_MIDDLE_X (SCREEN_WIDTH / 2)
-#define SCREEN_MIDDLE_Y (SCREEN_HEIGHT / 2)
-
 #define TILE_SIZE 24
 
 #define padding_top 24
@@ -27,10 +24,10 @@ _Pragma("once")
 #define MAX_POPUP_LENGHT 20
 
 #define POPUP_SPEED 1
-
 #define BARREL_SPEED 1
 #define PATH_LENGHT 20
 #define MONKE_DANCE_TIME 4
+#define BARREL_JUMP_OVER_HEIGHT 1
 
 // scores
 #define WIN_LEVEL_SCORE 1000

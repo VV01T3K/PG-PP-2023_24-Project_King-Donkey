@@ -749,11 +749,12 @@ void Player::collision() {
             getBORDER(RIGHT) > barrelList[i]->getBORDER(LEFT) &&
             getBORDER(DOWN) < barrelList[i]->getBORDER(UP) &&
             getBORDER(UP) < barrelList[i]->getBORDER(DOWN)) {
-            if (getBORDER(UP) <
-                    barrelList[i]->getBORDER(UP) - (TILE_SIZE * 5) ||
+            if (getBORDER(UP) < barrelList[i]->getBORDER(UP) -
+                                    (TILE_SIZE * 6 * BARREL_JUMP_OVER_HEIGHT) ||
                 (gravity_delta > 0 &&
                  getBORDER(UP) <
-                     barrelList[i]->getBORDER(UP) - (TILE_SIZE * 1))) {
+                     barrelList[i]->getBORDER(UP) -
+                         (TILE_SIZE * 1 * BARREL_JUMP_OVER_HEIGHT))) {
                 if (barrelList[i]->jumped_over == 0 && dead_state == 0 &&
                     platform_collision == 0 && ladder_state == 0 &&
                     jump_state == 1) {
