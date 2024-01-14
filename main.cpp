@@ -182,7 +182,7 @@ void OBJECT::simple_animation(float speed, int start, int end, int cycle) {
         };
     }
 
-    if (frameCounter >= 60 / speed) {
+    if (frameCounter >= 60 / ANIMATION_SPEED / speed) {
         frameCounter = 0;
         if (type == MONKE) monke_dance -= 1;
         if (cycle) {
@@ -796,7 +796,7 @@ void Player::animate() {
     }
 
     if (GAME->playing == 0) {
-        if (frameCounter >= 30) {
+        if (frameCounter >= 30 / ANIMATION_SPEED) {
             frameCounter = 0;
             curent_sprite++;
             if (curent_sprite > 5) curent_sprite = 0;
@@ -806,7 +806,7 @@ void Player::animate() {
 
     if (ladder_state) {
         if (curent_sprite != 6 && curent_sprite != 7) curent_sprite = 6;
-        if (frameCounter >= 60 && moving) {
+        if (frameCounter >= 60 / ANIMATION_SPEED && moving) {
             frameCounter = 0;
             curent_sprite = curent_sprite == 7 ? 6 : 7;
         }
@@ -826,7 +826,7 @@ void Player::animate() {
 
         return;
     }
-    if (frameCounter >= 30) {
+    if (frameCounter >= 30 / ANIMATION_SPEED) {
         frameCounter = 0;
         if (direction == LEFT)
             curent_sprite = curent_sprite == 2 ? 0 : 2;
@@ -1095,7 +1095,6 @@ extern "C"
     // the option:
     // project -> szablon2 properties -> Linker -> System -> Subsystem
     // must be changed to "Console"
-    printf("wyjscie printfa trafia do tego okienka\n");
     printf("printf output goes here\n");
 
     if (SDL_Init(SDL_INIT_EVERYTHING) != 0) {

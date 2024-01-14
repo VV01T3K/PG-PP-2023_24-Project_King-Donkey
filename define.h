@@ -1,39 +1,50 @@
 _Pragma("once")
 #include "header.h"
 
-#define SCREEN_WIDTH 640
-#define SCREEN_HEIGHT 480
+#define SCREEN_WIDTH 640   // The width of the game screen in pixels
+#define SCREEN_HEIGHT 480  // The height of the game screen in pixels
 
-#define TILE_SIZE 24
+#define TILE_SIZE 24  // The size of a tile in the game in pixels
 
-#define padding_top 24
+#define padding_top 24  // The padding at the top of the game screen in pixels
+
+// The padding at the bottom of the game screen in pixels
 #define padding_bottom 16
+// The padding on the left of the game screen in pixels
 #define padding_left 16
+// The padding on the right of the game screen in pixels
 #define padding_right 16
 
-#define start_x padding_left
-#define start_y (40 + padding_top)
+#define start_x padding_left        // The starting x-coordinate for the game
+#define start_y (40 + padding_top)  // The starting y-coordinate for the game
+
+// The ending x-coordinate for the game
 #define end_x (SCREEN_WIDTH - (padding_left + padding_right))
+// The ending y-coordinate for the game
 #define end_y (SCREEN_HEIGHT - (32 + 40 + padding_top + padding_bottom))
 
-#define MAX_SURFACES 30
-#define MAX_TEXTURES 5
-#define MAX_OBJECTS 200
-#define MAX_BARRELS 10
-#define MAX_POPUPS 10
-#define MAX_POPUP_LENGHT 20
+#define MAX_SURFACES 30      // The maximum number of surfaces in the game
+#define MAX_TEXTURES 5       // The maximum number of textures in the game
+#define MAX_OBJECTS 200      // The maximum number of objects in the game
+#define MAX_BARRELS 10       // The maximum number of barrels in the game
+#define MAX_POPUPS 10        // The maximum number of popups in the game
+#define MAX_POPUP_LENGHT 20  // The maximum length of a popup in the game
 
-#define POPUP_SPEED 1
-#define BARREL_SPEED 1
-#define PATH_LENGHT 20
-#define MONKE_DANCE_TIME 4
+// The height a barrel can jump over in the game
 #define BARREL_JUMP_OVER_HEIGHT 1
+#define POPUP_SPEED 1       // The speed of popups in the game
+#define BARREL_SPEED 1      // The speed of barrels in the game
+#define PATH_LENGHT 20      // The length of the path in the game
+#define MONKE_DANCE_TIME 4  // The time for the monkey to dance in the game
+#define JUMP_HEIGHT 1       // The height of a jump in the game
+#define ANIMATION_SPEED 1   // The speed of animation in the game
 
 // scores
-#define WIN_LEVEL_SCORE 1000
-#define COIN_COLLECTED_SCORE 800
+// The score for jumping over a barrel in the game
 #define OVER_BARREL_SCORE 300
-#define DEATH_PENALTY 500
+#define WIN_LEVEL_SCORE 1000      // The score for winning a level in the game
+#define COIN_COLLECTED_SCORE 800  // The score for collecting a coin in the game
+#define DEATH_PENALTY 500         // The penalty for dying in the game
 
     typedef struct {
     SDL_Surface *sprite[9];
@@ -65,7 +76,6 @@ enum ObjectType {
 enum PLATFORM_TYPE { PLATFORM_SHORT, PLATFORM_MEDIUM, PLATFORM_LONG };
 enum LADDER_TYPE { LADDER_SHORT, LADDER_MEDIUM, LADDER_LONG };
 
-#define JUMP_HEIGHT 1
 typedef struct {
     int curent_sprite = 0;
     int anim_cycle = 0;
@@ -95,6 +105,7 @@ typedef struct {
 
 // BUILD_LEVEL
 
+// Its to keep track of indexes for objects
 enum BUILDLEVEL {
     PLATFORM_SHORT__ = 10,
     PLATFORM_MEDIUM__ = 0,
